@@ -1,10 +1,10 @@
-package me.diamondforge.kyromera.levelcardlib;
+package me.diamondforge.kyromera.levelcardlib
 
 /**
  * Enum representing different modes for handling avatar images.
  * This determines how the avatar image is sourced for the level card.
  */
-public enum ImageMode {
+enum class ImageMode {
     /**
      * Use a local image provided as a byte array.
      * No download will be attempted.

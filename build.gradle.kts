@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("application")
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "2.1.0"
 }
 
 group = "me.diamondforge.kyromera"
@@ -13,18 +13,21 @@ application {
 
 repositories {
     mavenCentral()
-    maven("https://packages.jetbrains.team/maven/p/skija/maven")
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
 dependencies {
-    // Skija dependencies
-    implementation("org.jetbrains.skija:skija-windows:0.93.6")
-    implementation("org.jetbrains.skija:skija-macos-arm64:0.93.6")
-    implementation("org.jetbrains.skija:skija-macos-x64:0.93.6")
-    implementation("org.jetbrains.skija:skija-linux:0.93.1")
+    // Skiko dependencies - common
+    implementation("org.jetbrains.skiko:skiko:0.9.4.2")
+
+    // Platform-specific Skiko dependencies
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.9.4.2")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:0.9.4.2")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.9.4.2")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.9.4.2")
 
     // HTTP client for downloading images
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Kotlin standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
