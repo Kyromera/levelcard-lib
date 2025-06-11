@@ -19,6 +19,9 @@ repositories {
 dependencies {
     // Skija dependencies
     implementation("org.jetbrains.skija:skija-windows:0.93.6")
+    implementation("org.jetbrains.skija:skija-macos-arm64:0.93.6")
+    implementation("org.jetbrains.skija:skija-macos-x64:0.93.6")
+    implementation("org.jetbrains.skija:skija-linux:0.93.1")
 
     // HTTP client for downloading images
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
