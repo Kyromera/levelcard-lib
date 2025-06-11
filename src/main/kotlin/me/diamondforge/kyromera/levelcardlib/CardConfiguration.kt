@@ -13,7 +13,7 @@ class CardConfiguration private constructor(
     companion object {
         private const val DEFAULT_WIDTH = 950
         private const val DEFAULT_HEIGHT = 300
-        private const val DEFAULT_ACCENT_COLOR = 0xFFEA397C.toInt() // Pink
+        private const val DEFAULT_ACCENT_COLOR = 0xFF00A8E8.toInt() // Kryo blue
 
         /**
          * Creates a default configuration.

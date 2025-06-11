@@ -42,7 +42,7 @@ class LevelCardApp : JFrame() {
     init {
         title = "Level Card Generator"
         defaultCloseOperation = EXIT_ON_CLOSE
-        setSize(1000, 700)
+        setSize(1600, 700)
         setLocationRelativeTo(null)
 
         // Create main panel with padding
@@ -123,12 +123,12 @@ class LevelCardApp : JFrame() {
 
         gbc.gridx = 1
         gbc.gridy = 6
-        accentColorField = JTextField("FFEA397C", 10)
+        accentColorField = JTextField("FF00A8E8", 10)
         formPanel.add(accentColorField, gbc)
 
         val colorPickerButton = JButton("Pick Color")
         colorPickerButton.addActionListener { e ->
-            val color = JColorChooser.showDialog(this, "Choose Accent Color", Color.PINK)
+            val color = JColorChooser.showDialog(this, "Choose Accent Color", Color(0, 168, 232))
             if (color != null) {
                 val rgb = color.rgb
                 accentColorField.text = Integer.toHexString(rgb and 0xFFFFFFFF.toInt()).uppercase(Locale.getDefault())
