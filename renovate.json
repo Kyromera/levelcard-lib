@@ -1,6 +1,45 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+  "extends": ["config:recommended"],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["after 9am and before 5pm on weekdays"],
+  "prCreation": "immediate",
+  "requiredStatusChecks": null,
+  "automerge": true,
+  "automergeType": "pr",
+  "gradle": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "groupName": "major updates"
+    },
+    {
+      "matchPackagePatterns": ["org.jetbrains.kotlin.*"],
+      "groupName": "Kotlin core",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["org.jetbrains.skiko.*"],
+      "groupName": "Skiko platform libraries"
+    },
+    {
+      "matchDepTypes": ["testImplementation"],
+      "groupName": "test dependencies",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["kapt", "annotationProcessor"],
+      "groupName": "code generation tools"
+    }
+  ],
+  "commitMessagePrefix": "chore(deps):"
 }
