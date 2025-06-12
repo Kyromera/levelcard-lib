@@ -18,22 +18,14 @@ repositories {
 }
 
 dependencies {
-    // Skiko dependencies - common
     implementation("org.jetbrains.skiko:skiko:0.9.4.2")
-
-    // Platform-specific Skiko dependencies
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.9.4.2")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:0.9.4.2")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.9.4.2")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.9.4.2")
-
-    // HTTP client for downloading images
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
-    // Kotlin standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    // Testing
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
@@ -42,7 +34,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-// Create a fat JAR with all dependencies
 tasks.register<Jar>("fatJar") {
     archiveClassifier.set("all")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -59,18 +50,49 @@ tasks.register<Jar>("fatJar") {
     })
 }
 
-// Configure publishing for JitPack
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifact(tasks["fatJar"])
+
             groupId = project.group.toString()
             artifactId = rootProject.name
             version = project.version.toString()
 
-            from(components["java"])
+            pom {
+                name.set("Kyromera LevelCard Library")
+                description.set("A multi-architecture library for creating level cards")
+                url.set("https://github.com/kyromera/levelcard-lib")
 
-            // Also publish the fat JAR as a separate artifact
-            artifact(tasks["fatJar"])
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("fthomys")
+                        name.set("Fabian Thomys")
+                        email.set("git@fthomys.me")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/kyromera/levelcard-lib.git")
+                    developerConnection.set("scm:git:ssh://github.com:kyromera/levelcard-lib.git")
+                    url.set("https://github.com/kyromera/levelcard-lib")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "central"
+            url = uri("https://central.sonatype.com/api/v1/publish")
         }
     }
 }
