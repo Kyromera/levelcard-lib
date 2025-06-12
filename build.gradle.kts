@@ -18,10 +18,10 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.skiko:skiko:0.9.17")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.9.4.2")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:0.9.4.2")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.9.4.2")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.9.4.2")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.9.17")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:0.9.17")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.9.17")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.9.17")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
