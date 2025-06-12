@@ -1,7 +1,6 @@
 plugins {
     id("java")
     id("application")
-    id("maven-publish")
     kotlin("jvm") version "2.1.0"
 }
 
@@ -50,49 +49,3 @@ tasks.register<Jar>("fatJar") {
     })
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            artifact(tasks["fatJar"])
-
-            groupId = project.group.toString()
-            artifactId = rootProject.name
-            version = project.version.toString()
-
-            pom {
-                name.set("Kyromera LevelCard Library")
-                description.set("A multi-architecture library for creating level cards")
-                url.set("https://github.com/kyromera/levelcard-lib")
-
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("fthomys")
-                        name.set("Fabian Thomys")
-                        email.set("git@fthomys.me")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/kyromera/levelcard-lib.git")
-                    developerConnection.set("scm:git:ssh://github.com:kyromera/levelcard-lib.git")
-                    url.set("https://github.com/kyromera/levelcard-lib")
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "central"
-            url = uri("https://central.sonatype.com/api/v1/publish")
-        }
-    }
-}
