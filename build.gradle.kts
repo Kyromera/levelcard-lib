@@ -1,11 +1,12 @@
 plugins {
     id("java")
     id("application")
+    id("maven-publish")
     kotlin("jvm") version "2.1.0"
 }
 
 group = "me.diamondforge.kyromera"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 application {
     mainClass.set("me.diamondforge.kyromera.levelcardlib.example.LevelCardApp")
@@ -39,4 +40,37 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+// Create a fat JAR with all dependencies
+tasks.register<Jar>("fatJar") {
+    archiveClassifier.set("all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes["Main-Class"] = "me.diamondforge.kyromera.levelcardlib.example.LevelCardApp"
+    }
+
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+}
+
+// Configure publishing for JitPack
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = rootProject.name
+            version = project.version.toString()
+
+            from(components["java"])
+
+            // Also publish the fat JAR as a separate artifact
+            artifact(tasks["fatJar"])
+        }
+    }
 }
