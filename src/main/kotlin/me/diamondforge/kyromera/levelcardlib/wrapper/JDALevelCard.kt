@@ -105,7 +105,7 @@ object JDALevelCard {
          * @return This builder for chaining
          */
         fun level(level: Int): Builder {
-            require(level > 0) { "Level must be positive" }
+            require(level >= 0) { "Level must be positive" }
             this.level = level
             return this
         }
