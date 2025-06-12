@@ -97,8 +97,9 @@ The library includes comprehensive unit tests for all components:
 
 - CardConfiguration tests
 - UserData tests
-- LevelCardDrawer tests
+- CardRenderer tests
 - AvatarManager tests
+- StatusIndicator tests
 - Enum tests (OnlineStatus, ImageMode)
 
 To run the tests:
