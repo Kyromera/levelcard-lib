@@ -143,6 +143,34 @@ class JDALevelCardExample {
         }
 
         /**
+         * Example method demonstrating advanced customization with a custom CardConfiguration
+         */
+        private fun saveCustomConfigCard(user: User) {
+            // Create a custom configuration
+            val customConfig = me.diamondforge.kyromera.levelcardlib.CardConfiguration.Builder()
+                .dimensions(1000, 350)
+                .accentColor(0xFF00FF00.toInt()) // Green
+                .avatarConfig(180, 45)
+                .textMargin(290)
+                .textOffsets(85, 135, 205, 270)
+                .progressBarConfig(35, 220, 55)
+                .fontSizes(48f, 34f, 28f, 21f)
+                .backgroundConfig(14f, 26f)
+                .build()
+
+            // Create a level card with the custom configuration
+            val levelCard = JDALevelCard.builder(user)
+                .rank(5)
+                .level(10)
+                .xp(100, 500, 250)
+                .customConfig(customConfig)
+                .build()
+
+            // Save to file
+            ImageIO.write(levelCard, "png", File("custom-level-card.png"))
+        }
+
+        /**
          * Mock method to get user level data (in a real app, this would query a database)
          */
         private fun getUserLevelData(userId: String): UserLevelData {

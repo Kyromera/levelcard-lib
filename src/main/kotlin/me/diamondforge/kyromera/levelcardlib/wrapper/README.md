@@ -113,6 +113,34 @@ JDALevelCard.builder(user)
     .build()
 ```
 
+### Advanced Customization
+
+For more detailed customization, you can provide a custom CardConfiguration object:
+
+```kotlin
+// Create a custom configuration
+val customConfig = CardConfiguration.Builder()
+    .dimensions(1000, 350)
+    .accentColor(0xFF00FF00.toInt())
+    .avatarConfig(180, 45)
+    .textMargin(290)
+    .textOffsets(85, 135, 205, 270)
+    .progressBarConfig(35, 220, 55)
+    .fontSizes(48f, 34f, 28f, 21f)
+    .backgroundConfig(14f, 26f)
+    .build()
+
+// Use the custom configuration
+JDALevelCard.builder(user)
+    .rank(5)
+    .level(10)
+    .xp(100, 500, 250)
+    .customConfig(customConfig)
+    .build()
+```
+
+Note: When using a custom configuration, any explicitly set values from the builder (dimensions, accent color, showGenerationTime) will override the corresponding values in the custom configuration.
+
 ## Integration with Bot Commands
 
 Here's an example of how to integrate with a slash command:

@@ -43,24 +43,24 @@ object CardRenderer {
         val canvas = surface.canvas
 
         // Draw card background
-        drawCardBackground(canvas, config.width, config.height)
+        drawCardBackground(canvas, config.width, config.height, config)
 
         // Draw avatar
-        drawAvatar(canvas, avatarBytes, config.height, config.accentColor, userData)
+        drawAvatar(canvas, avatarBytes, config.height, config.accentColor, userData, config)
 
         // Load fonts
         val typefacePair = loadFonts()
 
         // Draw text elements
-        drawTextElements(canvas, userData, typefacePair.first, typefacePair.second)
+        drawTextElements(canvas, userData, typefacePair.first, typefacePair.second, config)
 
         // Draw progress bar
-        drawProgressBar(canvas, userData, config.width, config.accentColor)
+        drawProgressBar(canvas, userData, config.width, config.accentColor, config)
 
         // Calculate and draw generation time if enabled for debugging
         val generationTime = System.currentTimeMillis() - startTime
         if (config.showGenerationTime) {
-            drawGenerationTime(canvas, generationTime, typefacePair.second)
+            drawGenerationTime(canvas, generationTime, typefacePair.second, config)
         }
 
         // Convert Skia image to BufferedImage
@@ -92,33 +92,33 @@ object CardRenderer {
     /**
      * Draws the card background with shadow and rounded corners.
      */
-    private fun drawCardBackground(canvas: Canvas, width: Int, height: Int) {
+    private fun drawCardBackground(canvas: Canvas, width: Int, height: Int, config: CardConfiguration) {
         // Draw shadow for the background
         val shadowPaint = Paint().apply {
             color = 0x40000000 // Semi-transparent black
             isAntiAlias = true
-            maskFilter = MaskFilter.makeBlur(FilterBlurMode.NORMAL, 13f) // Scaled from 8f (1.667x)
+            maskFilter = MaskFilter.makeBlur(FilterBlurMode.NORMAL, config.shadowBlur)
         }
-        canvas.drawRRect(RRect.makeXYWH(7f, 7f, width.toFloat() - 14f, height.toFloat() - 14f, 25f), shadowPaint) // Scaled values (1.667x)
+        canvas.drawRRect(RRect.makeXYWH(7f, 7f, width.toFloat() - 14f, height.toFloat() - 14f, config.cornerRadius), shadowPaint)
 
         // Draw background (dark gray with rounded corners)
         val bgPaint = Paint().apply {
             color = 0xFF2A2A2A.toInt()
             isAntiAlias = true
         }
-        canvas.drawRRect(RRect.makeXYWH(0f, 0f, width.toFloat(), height.toFloat(), 25f), bgPaint) // Scaled corner radius from 15f to 25f
+        canvas.drawRRect(RRect.makeXYWH(0f, 0f, width.toFloat(), height.toFloat(), config.cornerRadius), bgPaint)
     }
 
     /**
      * Draws the avatar on the card.
      */
-    private fun drawAvatar(canvas: Canvas, avatarBytes: ByteArray?, cardHeight: Int, accentColor: Int, userData: UserData) {
+    private fun drawAvatar(canvas: Canvas, avatarBytes: ByteArray?, cardHeight: Int, accentColor: Int, userData: UserData, config: CardConfiguration) {
         AvatarManager.drawAvatar(
             canvas,
             avatarBytes,
-            AVATAR_MARGIN.toFloat(),
-            (cardHeight / 2 - AVATAR_SIZE / 2).toFloat(),
-            AVATAR_SIZE.toFloat(),
+            config.avatarMargin.toFloat(),
+            (cardHeight / 2 - config.avatarSize / 2).toFloat(),
+            config.avatarSize.toFloat(),
             accentColor,
             userData.onlineStatus,
             userData.showStatusIndicator
@@ -168,81 +168,81 @@ object CardRenderer {
     /**
      * Draws all text elements on the card.
      */
-    private fun drawTextElements(canvas: Canvas, userData: UserData, boldTypeface: Typeface, regularTypeface: Typeface) {
+    private fun drawTextElements(canvas: Canvas, userData: UserData, boldTypeface: Typeface, regularTypeface: Typeface, config: CardConfiguration) {
         // Draw username
-        drawUsername(canvas, userData.username, boldTypeface)
+        drawUsername(canvas, userData.username, boldTypeface, config)
 
         // Draw rank and level
-        drawRankAndLevel(canvas, userData.rank, userData.level, regularTypeface)
+        drawRankAndLevel(canvas, userData.rank, userData.level, regularTypeface, config)
 
         // Draw XP text
-        drawXpText(canvas, userData.currentXP, userData.maxXpForCurrentLevel, regularTypeface)
+        drawXpText(canvas, userData.currentXP, userData.maxXpForCurrentLevel, regularTypeface, config)
     }
 
     /**
      * Draws the username on the card.
      */
-    private fun drawUsername(canvas: Canvas, username: String, boldTypeface: Typeface) {
-        val usernameFont = Font(boldTypeface, 47f) // Scaled from 28f (1.667x)
+    private fun drawUsername(canvas: Canvas, username: String, boldTypeface: Typeface, config: CardConfiguration) {
+        val usernameFont = Font(boldTypeface, config.usernameFontSize)
         val usernamePaint = Paint().apply {
             color = 0xFFFFFFFF.toInt()
             isAntiAlias = true
         }
-        canvas.drawString(username, TEXT_MARGIN.toFloat(), USERNAME_Y_OFFSET.toFloat(), usernameFont, usernamePaint)
+        canvas.drawString(username, config.textMargin.toFloat(), config.usernameYOffset.toFloat(), usernameFont, usernamePaint)
     }
 
     /**
      * Draws the rank and level information on the card.
      */
-    private fun drawRankAndLevel(canvas: Canvas, rank: Int, level: Int, regularTypeface: Typeface) {
-        val rankLevelFont = Font(regularTypeface, 33f) // Scaled from 20f (1.667x)
+    private fun drawRankAndLevel(canvas: Canvas, rank: Int, level: Int, regularTypeface: Typeface, config: CardConfiguration) {
+        val rankLevelFont = Font(regularTypeface, config.rankLevelFontSize)
         val rankLevelPaint = Paint().apply {
             color = 0xFFCCCCCC.toInt()
             isAntiAlias = true
         }
         val rankLevelText = "Rank #$rank | Level $level"
-        canvas.drawString(rankLevelText, TEXT_MARGIN.toFloat(), RANK_LEVEL_Y_OFFSET.toFloat(), rankLevelFont, rankLevelPaint)
+        canvas.drawString(rankLevelText, config.textMargin.toFloat(), config.rankLevelYOffset.toFloat(), rankLevelFont, rankLevelPaint)
     }
 
     /**
      * Draws the XP text on the card.
      */
-    private fun drawXpText(canvas: Canvas, currentXP: Int, maxXP: Int, regularTypeface: Typeface) {
-        val xpFont = Font(regularTypeface, 27f) // Scaled from 16f (1.667x)
+    private fun drawXpText(canvas: Canvas, currentXP: Int, maxXP: Int, regularTypeface: Typeface, config: CardConfiguration) {
+        val xpFont = Font(regularTypeface, config.xpFontSize)
         val xpPaint = Paint().apply {
             color = 0xFFAAAAAA.toInt()
             isAntiAlias = true
         }
         val xpText = "$currentXP / $maxXP XP"
-        canvas.drawString(xpText, TEXT_MARGIN.toFloat(), XP_TEXT_Y_OFFSET.toFloat(), xpFont, xpPaint)
+        canvas.drawString(xpText, config.textMargin.toFloat(), config.xpTextYOffset.toFloat(), xpFont, xpPaint)
     }
 
     /**
      * Draws the progress bar on the card.
      */
-    private fun drawProgressBar(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int) {
+    private fun drawProgressBar(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int, config: CardConfiguration) {
         // Draw progress bar background
-        drawProgressBarBackground(canvas, cardWidth)
+        drawProgressBarBackground(canvas, cardWidth, config)
 
         // Draw progress bar fill
-        drawProgressBarFill(canvas, userData, cardWidth, accentColor)
+        drawProgressBarFill(canvas, userData, cardWidth, accentColor, config)
     }
 
     /**
      * Draws the background of the progress bar.
      */
-    private fun drawProgressBarBackground(canvas: Canvas, cardWidth: Int) {
+    private fun drawProgressBarBackground(canvas: Canvas, cardWidth: Int, config: CardConfiguration) {
         val progressBgPaint = Paint().apply {
             color = 0xFF444444.toInt()
             isAntiAlias = true
         }
         canvas.drawRRect(
             RRect.makeXYWH(
-                TEXT_MARGIN.toFloat(),
-                PROGRESS_BAR_Y_OFFSET.toFloat(),
-                (cardWidth - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat(),
-                PROGRESS_BAR_HEIGHT.toFloat(),
-                (PROGRESS_BAR_HEIGHT / 2).toFloat() // This is already scaled because PROGRESS_BAR_HEIGHT is scaled
+                config.textMargin.toFloat(),
+                config.progressBarYOffset.toFloat(),
+                (cardWidth - config.textMargin - config.progressBarMargin).toFloat(),
+                config.progressBarHeight.toFloat(),
+                (config.progressBarHeight / 2).toFloat()
             ),
             progressBgPaint
         )
@@ -251,21 +251,21 @@ object CardRenderer {
     /**
      * Draws the filled portion of the progress bar.
      */
-    private fun drawProgressBarFill(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int) {
+    private fun drawProgressBarFill(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int, config: CardConfiguration) {
         val progressWidth = (userData.currentXP - userData.minXpForCurrentLevel).toFloat() /
                 (userData.maxXpForCurrentLevel - userData.minXpForCurrentLevel).toFloat() *
-                (cardWidth - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat()
+                (cardWidth - config.textMargin - config.progressBarMargin).toFloat()
         val progressPaint = Paint().apply {
             color = accentColor
             isAntiAlias = true
         }
         canvas.drawRRect(
             RRect.makeXYWH(
-                TEXT_MARGIN.toFloat(),
-                PROGRESS_BAR_Y_OFFSET.toFloat(),
+                config.textMargin.toFloat(),
+                config.progressBarYOffset.toFloat(),
                 progressWidth,
-                PROGRESS_BAR_HEIGHT.toFloat(),
-                (PROGRESS_BAR_HEIGHT / 2).toFloat() // This is already scaled because PROGRESS_BAR_HEIGHT is scaled
+                config.progressBarHeight.toFloat(),
+                (config.progressBarHeight / 2).toFloat()
             ),
             progressPaint
         )
@@ -274,14 +274,14 @@ object CardRenderer {
     /**
      * Draws the generation time text on the card.
      */
-    private fun drawGenerationTime(canvas: Canvas, generationTime: Long, regularTypeface: Typeface) {
-        val timeFont = Font(regularTypeface, 20f) // Scaled from 12f (1.667x)
+    private fun drawGenerationTime(canvas: Canvas, generationTime: Long, regularTypeface: Typeface, config: CardConfiguration) {
+        val timeFont = Font(regularTypeface, config.timeFontSize)
         val timePaint = Paint().apply {
             color = 0xFF888888.toInt()
             isAntiAlias = true
         }
         val timeText = "Generated in ${generationTime}ms"
-        canvas.drawString(timeText, TEXT_MARGIN.toFloat(), TIME_TEXT_Y_OFFSET.toFloat(), timeFont, timePaint)
+        canvas.drawString(timeText, config.textMargin.toFloat(), config.timeTextYOffset.toFloat(), timeFont, timePaint)
     }
 
     /**

@@ -58,6 +58,7 @@ object JDALevelCard {
         private var showGenerationTime: Boolean = false
         private var downloadAvatar: Boolean = true
         private var customOnlineStatus: OnlineStatus? = null
+        private var customConfig: CardConfiguration? = null
 
         /**
          * Creates a builder for a JDA User.
@@ -176,6 +177,21 @@ object JDALevelCard {
         }
 
         /**
+         * Sets a custom card configuration.
+         * This allows for more detailed customization of the card appearance.
+         * If provided, this configuration will be used instead of creating a default one.
+         * Note that dimensions, accent color, and showGenerationTime settings from this builder
+         * will still be applied to the custom configuration if they were set.
+         *
+         * @param config The custom card configuration
+         * @return This builder for chaining
+         */
+        fun customConfig(config: CardConfiguration): Builder {
+            this.customConfig = config
+            return this
+        }
+
+        /**
          * Sets whether to download the avatar from Discord.
          * If set to false, the avatar URL will be used directly.
          *
@@ -211,12 +227,62 @@ object JDALevelCard {
             // Get the effective avatar URL (with size parameter for better quality)
             val avatarUrl = user.effectiveAvatarUrl + "?size=256"
 
-            // Create the card configuration
-            val config = CardConfiguration.Builder()
-                .dimensions(width, height)
-                .accentColor(accentColor ?: 0xFF2CBCC9.toInt()) // Use provided color or default
-                .showGenerationTime(showGenerationTime)
-                .build()
+            // Create or use the card configuration
+            val config = if (customConfig != null) {
+                // If we have a custom config, apply any explicitly set values from the builder
+                val configBuilder = CardConfiguration.Builder()
+
+                // Start with the custom config
+                val tempConfig = customConfig!!
+
+                // Apply dimensions if they were explicitly set
+                if (width != 950 || height != 300) {
+                    configBuilder.dimensions(width, height)
+                } else {
+                    configBuilder.dimensions(tempConfig.width, tempConfig.height)
+                }
+
+                // Apply accent color if it was explicitly set
+                if (accentColor != null) {
+                    configBuilder.accentColor(accentColor!!)
+                } else {
+                    configBuilder.accentColor(tempConfig.accentColor)
+                }
+
+                // Apply showGenerationTime
+                configBuilder.showGenerationTime(showGenerationTime)
+
+                // Copy all other properties from the custom config
+                configBuilder
+                    .avatarConfig(tempConfig.avatarSize, tempConfig.avatarMargin)
+                    .textMargin(tempConfig.textMargin)
+                    .textOffsets(
+                        tempConfig.usernameYOffset,
+                        tempConfig.rankLevelYOffset,
+                        tempConfig.xpTextYOffset,
+                        tempConfig.timeTextYOffset
+                    )
+                    .progressBarConfig(
+                        tempConfig.progressBarHeight,
+                        tempConfig.progressBarYOffset,
+                        tempConfig.progressBarMargin
+                    )
+                    .fontSizes(
+                        tempConfig.usernameFontSize,
+                        tempConfig.rankLevelFontSize,
+                        tempConfig.xpFontSize,
+                        tempConfig.timeFontSize
+                    )
+                    .backgroundConfig(tempConfig.shadowBlur, tempConfig.cornerRadius)
+                    .build()
+            } else {
+                // Create a default configuration
+                CardConfiguration.Builder()
+                    .dimensions(width, height)
+                    .accentColor(accentColor ?: 0xFF2CBCC9.toInt()) // Use provided color or default
+                    .showGenerationTime(showGenerationTime)
+                    .build()
+            }
 
             // Create the user data
             val userDataBuilder = UserData.Builder(username)
