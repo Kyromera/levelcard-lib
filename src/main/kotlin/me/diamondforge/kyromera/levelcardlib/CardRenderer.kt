@@ -35,13 +35,42 @@ object CardRenderer {
         // Start timing the generation
         val startTime = System.currentTimeMillis()
 
-        // Get configuration values
-        val accentColor = config.accentColor
-        val width = config.width
-        val height = config.height
-        val showGenerationTime = config.showGenerationTime
-
         // Get avatar bytes (download if needed)
+        val avatarBytes = getAvatarBytes(userData)
+
+        // Create Skia surface and canvas
+        val surface = createSurface(config.width, config.height)
+        val canvas = surface.canvas
+
+        // Draw card background
+        drawCardBackground(canvas, config.width, config.height)
+
+        // Draw avatar
+        drawAvatar(canvas, avatarBytes, config.height, config.accentColor, userData)
+
+        // Load fonts
+        val typefacePair = loadFonts()
+
+        // Draw text elements
+        drawTextElements(canvas, userData, typefacePair.first, typefacePair.second)
+
+        // Draw progress bar
+        drawProgressBar(canvas, userData, config.width, config.accentColor)
+
+        // Calculate and draw generation time if enabled for debugging
+        val generationTime = System.currentTimeMillis() - startTime
+        if (config.showGenerationTime) {
+            drawGenerationTime(canvas, generationTime, typefacePair.second)
+        }
+
+        // Convert Skia image to BufferedImage
+        return convertToBufferedImage(surface)
+    }
+
+    /**
+     * Gets avatar bytes, downloading if necessary.
+     */
+    private fun getAvatarBytes(userData: UserData): ByteArray? {
         var avatarBytes = userData.avatarBytes
         if (userData.imageMode == ImageMode.DOWNLOAD && userData.avatarUrl != null) {
             try {
@@ -50,11 +79,20 @@ object CardRenderer {
                 throw RuntimeException("Failed to download avatar from URL: ${userData.avatarUrl}", e)
             }
         }
+        return avatarBytes
+    }
 
-        // Create Skia surface
-        val surface = Surface.makeRasterN32Premul(width, height)
-        val canvas = surface.canvas
+    /**
+     * Creates a Skia surface with the specified dimensions.
+     */
+    private fun createSurface(width: Int, height: Int): Surface {
+        return Surface.makeRasterN32Premul(width, height)
+    }
 
+    /**
+     * Draws the card background with shadow and rounded corners.
+     */
+    private fun drawCardBackground(canvas: Canvas, width: Int, height: Int) {
         // Draw shadow for the background
         val shadowPaint = Paint().apply {
             color = 0x40000000 // Semi-transparent black
@@ -69,55 +107,131 @@ object CardRenderer {
             isAntiAlias = true
         }
         canvas.drawRRect(RRect.makeXYWH(0f, 0f, width.toFloat(), height.toFloat(), 25f), bgPaint) // Scaled corner radius from 15f to 25f
+    }
 
-        // Draw avatar if available
+    /**
+     * Draws the avatar on the card.
+     */
+    private fun drawAvatar(canvas: Canvas, avatarBytes: ByteArray?, cardHeight: Int, accentColor: Int, userData: UserData) {
         AvatarManager.drawAvatar(
             canvas,
             avatarBytes,
             AVATAR_MARGIN.toFloat(),
-            (height / 2 - AVATAR_SIZE / 2).toFloat(),
+            (cardHeight / 2 - AVATAR_SIZE / 2).toFloat(),
             AVATAR_SIZE.toFloat(),
             accentColor,
             userData.onlineStatus,
             userData.showStatusIndicator
         )
+    }
 
-        // Load fonts
+    /**
+     * Loads fonts for text rendering.
+     * @return Pair of (boldTypeface, regularTypeface)
+     */
+    private fun loadFonts(): Pair<Typeface, Typeface> {
         val fontManager = FontMgr.default
 
-        // Use a modern font for bold text if available, otherwise use Arial
-        val boldTypeface = fontManager.matchFamilyStyle("Arial", FontStyle.BOLD)
+        // Try to get Arial Bold, then Sans-Serif Bold, then default to a character-based match
+        var boldTypeface = fontManager.matchFamilyStyle("Arial", FontStyle.BOLD)
+        if (boldTypeface == null) {
+            boldTypeface = fontManager.matchFamilyStyle("Sans-Serif", FontStyle.BOLD)
+        }
+        if (boldTypeface == null && fontManager.familiesCount > 0) {
+            boldTypeface = fontManager.matchFamilyStyleCharacter(
+                null, FontStyle.BOLD, null, 'A'.code
+            )
+        }
+        // If still null, throw an exception as we need a font to render text
+        if (boldTypeface == null) {
+            throw RuntimeException("Failed to load any usable bold font")
+        }
 
-        // Use a modern font for regular text if available, otherwise use Arial
-        val regularTypeface = fontManager.matchFamilyStyle("Arial", FontStyle.NORMAL)
+        // Try to get Arial Regular, then Sans-Serif Regular, then default to a character-based match
+        var regularTypeface = fontManager.matchFamilyStyle("Arial", FontStyle.NORMAL)
+        if (regularTypeface == null) {
+            regularTypeface = fontManager.matchFamilyStyle("Sans-Serif", FontStyle.NORMAL)
+        }
+        if (regularTypeface == null && fontManager.familiesCount > 0) {
+            regularTypeface = fontManager.matchFamilyStyleCharacter(
+                null, FontStyle.NORMAL, null, 'A'.code
+            )
+        }
+        // If still null, throw an exception as we need a font to render text
+        if (regularTypeface == null) {
+            throw RuntimeException("Failed to load any usable regular font")
+        }
 
+        return Pair(boldTypeface, regularTypeface)
+    }
+
+    /**
+     * Draws all text elements on the card.
+     */
+    private fun drawTextElements(canvas: Canvas, userData: UserData, boldTypeface: Typeface, regularTypeface: Typeface) {
         // Draw username
+        drawUsername(canvas, userData.username, boldTypeface)
+
+        // Draw rank and level
+        drawRankAndLevel(canvas, userData.rank, userData.level, regularTypeface)
+
+        // Draw XP text
+        drawXpText(canvas, userData.currentXP, userData.maxXP, regularTypeface)
+    }
+
+    /**
+     * Draws the username on the card.
+     */
+    private fun drawUsername(canvas: Canvas, username: String, boldTypeface: Typeface) {
         val usernameFont = Font(boldTypeface, 47f) // Scaled from 28f (1.667x)
         val usernamePaint = Paint().apply {
             color = 0xFFFFFFFF.toInt()
             isAntiAlias = true
         }
-        canvas.drawString(userData.username, TEXT_MARGIN.toFloat(), USERNAME_Y_OFFSET.toFloat(), usernameFont, usernamePaint)
+        canvas.drawString(username, TEXT_MARGIN.toFloat(), USERNAME_Y_OFFSET.toFloat(), usernameFont, usernamePaint)
+    }
 
-        // Draw rank and level
+    /**
+     * Draws the rank and level information on the card.
+     */
+    private fun drawRankAndLevel(canvas: Canvas, rank: Int, level: Int, regularTypeface: Typeface) {
         val rankLevelFont = Font(regularTypeface, 33f) // Scaled from 20f (1.667x)
         val rankLevelPaint = Paint().apply {
             color = 0xFFCCCCCC.toInt()
             isAntiAlias = true
         }
-        val rankLevelText = "Rank #${userData.rank} | Level ${userData.level}"
+        val rankLevelText = "Rank #$rank | Level $level"
         canvas.drawString(rankLevelText, TEXT_MARGIN.toFloat(), RANK_LEVEL_Y_OFFSET.toFloat(), rankLevelFont, rankLevelPaint)
+    }
 
-        // Draw XP text
+    /**
+     * Draws the XP text on the card.
+     */
+    private fun drawXpText(canvas: Canvas, currentXP: Int, maxXP: Int, regularTypeface: Typeface) {
         val xpFont = Font(regularTypeface, 27f) // Scaled from 16f (1.667x)
         val xpPaint = Paint().apply {
             color = 0xFFAAAAAA.toInt()
             isAntiAlias = true
         }
-        val xpText = "${userData.currentXP} / ${userData.maxXP} XP"
+        val xpText = "$currentXP / $maxXP XP"
         canvas.drawString(xpText, TEXT_MARGIN.toFloat(), XP_TEXT_Y_OFFSET.toFloat(), xpFont, xpPaint)
+    }
 
+    /**
+     * Draws the progress bar on the card.
+     */
+    private fun drawProgressBar(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int) {
         // Draw progress bar background
+        drawProgressBarBackground(canvas, cardWidth)
+
+        // Draw progress bar fill
+        drawProgressBarFill(canvas, userData, cardWidth, accentColor)
+    }
+
+    /**
+     * Draws the background of the progress bar.
+     */
+    private fun drawProgressBarBackground(canvas: Canvas, cardWidth: Int) {
         val progressBgPaint = Paint().apply {
             color = 0xFF444444.toInt()
             isAntiAlias = true
@@ -126,17 +240,21 @@ object CardRenderer {
             RRect.makeXYWH(
                 TEXT_MARGIN.toFloat(),
                 PROGRESS_BAR_Y_OFFSET.toFloat(),
-                (width - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat(),
+                (cardWidth - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat(),
                 PROGRESS_BAR_HEIGHT.toFloat(),
                 (PROGRESS_BAR_HEIGHT / 2).toFloat() // This is already scaled because PROGRESS_BAR_HEIGHT is scaled
             ),
             progressBgPaint
         )
+    }
 
-        // Draw progress bar
+    /**
+     * Draws the filled portion of the progress bar.
+     */
+    private fun drawProgressBarFill(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int) {
         val progressWidth = (userData.currentXP - userData.minXP).toFloat() /
                 (userData.maxXP - userData.minXP).toFloat() *
-                (width - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat()
+                (cardWidth - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat()
         val progressPaint = Paint().apply {
             color = accentColor
             isAntiAlias = true
@@ -151,23 +269,25 @@ object CardRenderer {
             ),
             progressPaint
         )
+    }
 
-        // Calculate generation time
-        val endTime = System.currentTimeMillis()
-        val generationTime = endTime - startTime
-
-        // Draw generation time if enabled
-        if (showGenerationTime) {
-            val timeFont = Font(regularTypeface, 20f) // Scaled from 12f (1.667x)
-            val timePaint = Paint().apply {
-                color = 0xFF888888.toInt()
-                isAntiAlias = true
-            }
-            val timeText = "Generated in ${generationTime}ms"
-            canvas.drawString(timeText, TEXT_MARGIN.toFloat(), TIME_TEXT_Y_OFFSET.toFloat(), timeFont, timePaint)
+    /**
+     * Draws the generation time text on the card.
+     */
+    private fun drawGenerationTime(canvas: Canvas, generationTime: Long, regularTypeface: Typeface) {
+        val timeFont = Font(regularTypeface, 20f) // Scaled from 12f (1.667x)
+        val timePaint = Paint().apply {
+            color = 0xFF888888.toInt()
+            isAntiAlias = true
         }
+        val timeText = "Generated in ${generationTime}ms"
+        canvas.drawString(timeText, TEXT_MARGIN.toFloat(), TIME_TEXT_Y_OFFSET.toFloat(), timeFont, timePaint)
+    }
 
-        // Convert Skia image to BufferedImage
+    /**
+     * Converts a Skia surface to a Java BufferedImage.
+     */
+    private fun convertToBufferedImage(surface: Surface): BufferedImage {
         val skiaImage = surface.makeImageSnapshot()
         val imageData = skiaImage.encodeToData(EncodedImageFormat.PNG)
             ?: throw RuntimeException("Failed to encode image to PNG")
