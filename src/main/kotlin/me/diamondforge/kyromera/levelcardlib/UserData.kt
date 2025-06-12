@@ -8,8 +8,8 @@ data class UserData private constructor(
     val username: String,
     val rank: Int,
     val level: Int,
-    val minXP: Int,
-    val maxXP: Int,
+    val minXpForCurrentLevel: Int,
+    val maxXpForCurrentLevel: Int,
     val currentXP: Int,
     val avatarBytes: ByteArray?,
     val avatarUrl: String?,
@@ -27,8 +27,8 @@ data class UserData private constructor(
         if (username != other.username) return false
         if (rank != other.rank) return false
         if (level != other.level) return false
-        if (minXP != other.minXP) return false
-        if (maxXP != other.maxXP) return false
+        if (minXpForCurrentLevel != other.minXpForCurrentLevel) return false
+        if (maxXpForCurrentLevel != other.maxXpForCurrentLevel) return false
         if (currentXP != other.currentXP) return false
         if (avatarBytes != null) {
             if (other.avatarBytes == null) return false
@@ -46,8 +46,8 @@ data class UserData private constructor(
         var result = username.hashCode()
         result = 31 * result + rank
         result = 31 * result + level
-        result = 31 * result + minXP
-        result = 31 * result + maxXP
+        result = 31 * result + minXpForCurrentLevel
+        result = 31 * result + maxXpForCurrentLevel
         result = 31 * result + currentXP
         result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
         result = 31 * result + (avatarUrl?.hashCode() ?: 0)
@@ -67,8 +67,8 @@ data class UserData private constructor(
 
         private var rank: Int = 1
         private var level: Int = 1
-        private var minXP: Int = 0
-        private var maxXP: Int = 100
+        private var minXpForCurrentLevel: Int = 0
+        private var maxXpForCurrentLevel: Int = 100
         private var currentXP: Int = 0
         private var avatarBytes: ByteArray? = null
         private var avatarUrl: String? = null
@@ -103,17 +103,17 @@ data class UserData private constructor(
         /**
          * Sets the XP values.
          *
-         * @param minXP The minimum XP for the current level
-         * @param maxXP The maximum XP for the current level
+         * @param minXpForCurrentLevel The minimum XP for the current level
+         * @param maxXpForCurrentLevel The maximum XP for the current level
          * @param currentXP The user's current XP
          * @return This builder for chaining
          */
-        fun xp(minXP: Int, maxXP: Int, currentXP: Int): Builder {
-            require(minXP >= 0 && maxXP > minXP && currentXP >= minXP && currentXP <= maxXP) {
-                "Invalid XP values: minXP must be >= 0, maxXP > minXP, and minXP <= currentXP <= maxXP"
+        fun xp(minXpForCurrentLevel: Int, maxXpForCurrentLevel: Int, currentXP: Int): Builder {
+            require(minXpForCurrentLevel >= 0 && maxXpForCurrentLevel > minXpForCurrentLevel && currentXP >= minXpForCurrentLevel && currentXP <= maxXpForCurrentLevel) {
+                "Invalid XP values: minXpForCurrentLevel must be >= 0, maxXpForCurrentLevel > minXpForCurrentLevel, and minXpForCurrentLevel <= currentXP <= maxXpForCurrentLevel"
             }
-            this.minXP = minXP
-            this.maxXP = maxXP
+            this.minXpForCurrentLevel = minXpForCurrentLevel
+            this.maxXpForCurrentLevel = maxXpForCurrentLevel
             this.currentXP = currentXP
             return this
         }
@@ -181,13 +181,13 @@ data class UserData private constructor(
                     "Avatar URL must be provided when using DOWNLOAD image mode"
                 }
             }
-            
+
             return UserData(
                 username,
                 rank,
                 level,
-                minXP,
-                maxXP,
+                minXpForCurrentLevel,
+                maxXpForCurrentLevel,
                 currentXP,
                 avatarBytes,
                 avatarUrl,

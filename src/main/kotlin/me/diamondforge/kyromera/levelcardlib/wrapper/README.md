@@ -56,7 +56,7 @@ user.sendLevelCard(
     rank = 5,
     level = 10,
     currentXP = 250,
-    maxXP = 500
+    maxXpForCurrentLevel = 500
 )
 ```
 
@@ -121,23 +121,23 @@ Here's an example of how to integrate with a slash command:
 @JDASlashCommand(name = "level", description = "Show your level card")
 fun levelCommand(event: SlashCommandInteractionEvent) {
     event.deferReply().queue()
-    
+
     val member = event.member ?: return
     val rank = 5 // calculate from your ranking system
     val level = 10 // calculate from your leveling system
     val currentXP = 250 // Get from your database
-    val maxXP = 500 // calculate from your leveling system
-    val minXP = 0 // calculate from your leveling system
-    
+    val maxXpForCurrentLevel = 500 // calculate from your leveling system
+    val minXpForCurrentLevel = 0 // calculate from your leveling system
+
     val levelCard = member.createLevelCard()
         .rank(rank)
         .level(level)
-        .xp(minXP, maxXP, currentXP)
+        .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
         .build()
-    
+
     val imageBytes = levelCard.toByteArray()
     val fileUpload = FileUpload.fromData(imageBytes, "level-card.png")
-    
+
     event.hook.sendFiles(fileUpload).queue()
 }
 ```

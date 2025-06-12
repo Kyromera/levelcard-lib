@@ -17,7 +17,7 @@ import javax.imageio.ImageIO
  * This class simplifies the process of creating level cards for Discord users.
  */
 object JDALevelCard {
-    
+
     /**
      * Creates a new builder for creating level cards for JDA users.
      *
@@ -27,7 +27,7 @@ object JDALevelCard {
     fun builder(user: User): Builder {
         return Builder(user)
     }
-    
+
     /**
      * Creates a new builder for creating level cards for JDA guild members.
      * This method uses the member's nickname if available, otherwise falls back to the username.
@@ -38,7 +38,7 @@ object JDALevelCard {
     fun builder(member: Member): Builder {
         return Builder(member)
     }
-    
+
     /**
      * Builder class for creating level cards for JDA users.
      */
@@ -48,8 +48,8 @@ object JDALevelCard {
         private var member: Member? = null
         private var rank: Int = 1
         private var level: Int = 1
-        private var minXP: Int = 0
-        private var maxXP: Int = 100
+        private var minXpForCurrentLevel: Int = 0
+        private var maxXpForCurrentLevel: Int = 100
         private var currentXP: Int = 0
         private var accentColor: Int? = null
         private var width: Int = 950
@@ -58,7 +58,7 @@ object JDALevelCard {
         private var showGenerationTime: Boolean = false
         private var downloadAvatar: Boolean = true
         private var customOnlineStatus: OnlineStatus? = null
-        
+
         /**
          * Creates a builder for a JDA User.
          *
@@ -68,7 +68,7 @@ object JDALevelCard {
             this.user = user
             this.username = user.name
         }
-        
+
         /**
          * Creates a builder for a JDA Member.
          * Uses the member's nickname if available, otherwise falls back to the username.
@@ -79,13 +79,13 @@ object JDALevelCard {
             this.user = member.user
             this.username = member.effectiveName
             this.member = member
-            
+
             // If the member has a color, use it as the accent color
             if (member.colorRaw != 0) {
                 this.accentColor = member.colorRaw
             }
         }
-        
+
         /**
          * Sets the user's rank.
          *
@@ -97,7 +97,7 @@ object JDALevelCard {
             this.rank = rank
             return this
         }
-        
+
         /**
          * Sets the user's level.
          *
@@ -109,25 +109,25 @@ object JDALevelCard {
             this.level = level
             return this
         }
-        
+
         /**
          * Sets the XP values.
          *
-         * @param minXP Minimum XP for the current level
-         * @param maxXP Maximum XP for the current level
+         * @param minXpForCurrentLevel Minimum XP for the current level
+         * @param maxXpForCurrentLevel Maximum XP for the current level
          * @param currentXP Current XP of the user
          * @return This builder for chaining
          */
-        fun xp(minXP: Int, maxXP: Int, currentXP: Int): Builder {
-            require(minXP >= 0 && maxXP > minXP && currentXP >= minXP && currentXP <= maxXP) {
-                "Invalid XP values: minXP must be >= 0, maxXP > minXP, and minXP <= currentXP <= maxXP"
+        fun xp(minXpForCurrentLevel: Int, maxXpForCurrentLevel: Int, currentXP: Int): Builder {
+            require(minXpForCurrentLevel >= 0 && maxXpForCurrentLevel > minXpForCurrentLevel && currentXP >= minXpForCurrentLevel && currentXP <= maxXpForCurrentLevel) {
+                "Invalid XP values: minXpForCurrentLevel must be >= 0, maxXpForCurrentLevel > minXpForCurrentLevel, and minXpForCurrentLevel <= currentXP <= maxXpForCurrentLevel"
             }
-            this.minXP = minXP
-            this.maxXP = maxXP
+            this.minXpForCurrentLevel = minXpForCurrentLevel
+            this.maxXpForCurrentLevel = maxXpForCurrentLevel
             this.currentXP = currentXP
             return this
         }
-        
+
         /**
          * Sets the accent color.
          *
@@ -138,7 +138,7 @@ object JDALevelCard {
             this.accentColor = accentColor
             return this
         }
-        
+
         /**
          * Sets the card dimensions.
          *
@@ -152,7 +152,7 @@ object JDALevelCard {
             this.height = height
             return this
         }
-        
+
         /**
          * Sets whether to show the status indicator.
          *
@@ -163,7 +163,7 @@ object JDALevelCard {
             this.showStatusIndicator = showStatusIndicator
             return this
         }
-        
+
         /**
          * Sets whether to show generation time on the card.
          *
@@ -174,7 +174,7 @@ object JDALevelCard {
             this.showGenerationTime = showGenerationTime
             return this
         }
-        
+
         /**
          * Sets whether to download the avatar from Discord.
          * If set to false, the avatar URL will be used directly.
@@ -186,7 +186,7 @@ object JDALevelCard {
             this.downloadAvatar = downloadAvatar
             return this
         }
-        
+
         /**
          * Sets a custom online status for the user.
          * This overrides the status that would be determined from the Member object.
@@ -198,7 +198,7 @@ object JDALevelCard {
             this.customOnlineStatus = status
             return this
         }
-        
+
         /**
          * Builds and returns the level card.
          *
@@ -207,25 +207,25 @@ object JDALevelCard {
         fun build(): BufferedImage {
             // Determine online status from available sources
             val onlineStatus = determineOnlineStatus()
-            
+
             // Get the effective avatar URL (with size parameter for better quality)
             val avatarUrl = user.effectiveAvatarUrl + "?size=256"
-            
+
             // Create the card configuration
             val config = CardConfiguration.Builder()
                 .dimensions(width, height)
                 .accentColor(accentColor ?: 0xFF2CBCC9.toInt()) // Use provided color or default
                 .showGenerationTime(showGenerationTime)
                 .build()
-            
+
             // Create the user data
             val userDataBuilder = UserData.Builder(username)
                 .rank(rank)
                 .level(level)
-                .xp(minXP, maxXP, currentXP)
+                .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
                 .onlineStatus(onlineStatus)
                 .showStatusIndicator(showStatusIndicator)
-            
+
             // Handle avatar
             if (downloadAvatar) {
                 try {
@@ -240,9 +240,9 @@ object JDALevelCard {
                 // Use URL directly
                 userDataBuilder.avatarUrl(avatarUrl)
             }
-            
+
             val userData = userDataBuilder.build()
-            
+
             // Use the LevelCardDrawer to create the card
             return LevelCardDrawer.builder(username)
                 .avatarSource(
@@ -252,7 +252,7 @@ object JDALevelCard {
                 )
                 .rank(userData.rank)
                 .level(userData.level)
-                .xp(userData.minXP, userData.maxXP, userData.currentXP)
+                .xp(userData.minXpForCurrentLevel, userData.maxXpForCurrentLevel, userData.currentXP)
                 .accentColor(config.accentColor)
                 .dimensions(config.width, config.height)
                 .onlineStatus(userData.onlineStatus)
@@ -260,7 +260,7 @@ object JDALevelCard {
                 .showGenerationTime(config.showGenerationTime)
                 .build()
         }
-        
+
         /**
          * Determines the online status to use for the level card.
          * Priority order:
@@ -273,16 +273,16 @@ object JDALevelCard {
         private fun determineOnlineStatus(): OnlineStatus {
             // If custom status is set, use it
             customOnlineStatus?.let { return it }
-            
+
             // If member is available, get status from it
             member?.let {
                 return mapJDAStatus(it.onlineStatus)
             }
-            
+
             // Default to ONLINE
             return OnlineStatus.ONLINE
         }
-        
+
         /**
          * Maps JDA's online status to the library's OnlineStatus enum.
          *
@@ -297,7 +297,7 @@ object JDALevelCard {
                 else -> OnlineStatus.OFFLINE
             }
         }
-        
+
         /**
          * Downloads an avatar image from a URL and converts it to a byte array.
          *
@@ -310,7 +310,7 @@ object JDALevelCard {
             connection.connectTimeout = 5000
             connection.readTimeout = 5000
             connection.setRequestProperty("User-Agent", "JDALevelCard/1.0")
-            
+
             val image = ImageIO.read(connection.getInputStream())
             val outputStream = ByteArrayOutputStream()
             ImageIO.write(image, "png", outputStream)

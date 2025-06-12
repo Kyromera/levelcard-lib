@@ -176,7 +176,7 @@ object CardRenderer {
         drawRankAndLevel(canvas, userData.rank, userData.level, regularTypeface)
 
         // Draw XP text
-        drawXpText(canvas, userData.currentXP, userData.maxXP, regularTypeface)
+        drawXpText(canvas, userData.currentXP, userData.maxXpForCurrentLevel, regularTypeface)
     }
 
     /**
@@ -252,8 +252,8 @@ object CardRenderer {
      * Draws the filled portion of the progress bar.
      */
     private fun drawProgressBarFill(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int) {
-        val progressWidth = (userData.currentXP - userData.minXP).toFloat() /
-                (userData.maxXP - userData.minXP).toFloat() *
+        val progressWidth = (userData.currentXP - userData.minXpForCurrentLevel).toFloat() /
+                (userData.maxXpForCurrentLevel - userData.minXpForCurrentLevel).toFloat() *
                 (cardWidth - TEXT_MARGIN - PROGRESS_BAR_MARGIN).toFloat()
         val progressPaint = Paint().apply {
             color = accentColor

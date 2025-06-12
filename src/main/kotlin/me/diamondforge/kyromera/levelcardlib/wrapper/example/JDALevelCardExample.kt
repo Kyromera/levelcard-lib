@@ -79,7 +79,7 @@ class JDALevelCardExample {
                 rank = levelData.rank,
                 level = levelData.level,
                 currentXP = levelData.currentXP,
-                maxXP = levelData.maxXP,
+                maxXpForCurrentLevel = levelData.maxXP,
                 content = "Here's your level card, ${member.effectiveName}!"
             )
         }

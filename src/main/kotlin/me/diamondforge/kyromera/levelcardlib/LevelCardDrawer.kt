@@ -31,8 +31,8 @@ object LevelCardDrawer {
      * @param username Username to display on the card
      * @param rank User's rank
      * @param level User's level
-     * @param minXP Minimum XP for the current level
-     * @param maxXP Maximum XP for the current level
+     * @param minXpForCurrentLevel Minimum XP for the current level
+     * @param maxXpForCurrentLevel Maximum XP for the current level
      * @param currentXP Current XP of the user
      * @param accentColor Accent color for the card (ARGB format)
      * @param width Width of the card
@@ -46,8 +46,8 @@ object LevelCardDrawer {
         username: String,
         rank: Int,
         level: Int,
-        minXP: Int,
-        maxXP: Int,
+        minXpForCurrentLevel: Int,
+        maxXpForCurrentLevel: Int,
         currentXP: Int,
         accentColor: Int,
         width: Int,
@@ -57,7 +57,7 @@ object LevelCardDrawer {
             .avatarSource(avatarBytes, avatarUrl, downloadFromUrl)
             .rank(rank)
             .level(level)
-            .xp(minXP, maxXP, currentXP)
+            .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
             .accentColor(accentColor)
             .dimensions(width, height)
             .build()
@@ -72,8 +72,8 @@ object LevelCardDrawer {
      * @param username Username to display on the card
      * @param rank User's rank
      * @param level User's level
-     * @param minXP Minimum XP for the current level
-     * @param maxXP Maximum XP for the current level
+     * @param minXpForCurrentLevel Minimum XP for the current level
+     * @param maxXpForCurrentLevel Maximum XP for the current level
      * @param currentXP Current XP of the user
      * @param accentColor Accent color for the card (ARGB format)
      * @param width Width of the card
@@ -90,8 +90,8 @@ object LevelCardDrawer {
         username: String,
         rank: Int,
         level: Int,
-        minXP: Int,
-        maxXP: Int,
+        minXpForCurrentLevel: Int,
+        maxXpForCurrentLevel: Int,
         currentXP: Int,
         accentColor: Int,
         width: Int,
@@ -104,7 +104,7 @@ object LevelCardDrawer {
             .avatarSource(avatarBytes, avatarUrl, downloadFromUrl)
             .rank(rank)
             .level(level)
-            .xp(minXP, maxXP, currentXP)
+            .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
             .accentColor(accentColor)
             .dimensions(width, height)
             .onlineStatus(onlineStatus)
@@ -123,14 +123,14 @@ object LevelCardDrawer {
         username: String,
         rank: Int,
         level: Int,
-        minXP: Int,
-        maxXP: Int,
+        minXpForCurrentLevel: Int,
+        maxXpForCurrentLevel: Int,
         currentXP: Int,
         accentColor: Int
     ): BufferedImage {
         return drawLevelCard(
             avatarBytes, avatarUrl, downloadFromUrl, username, rank, level,
-            minXP, maxXP, currentXP, accentColor, DEFAULT_WIDTH, DEFAULT_HEIGHT
+            minXpForCurrentLevel, maxXpForCurrentLevel, currentXP, accentColor, DEFAULT_WIDTH, DEFAULT_HEIGHT
         )
     }
 
@@ -144,13 +144,13 @@ object LevelCardDrawer {
         username: String,
         rank: Int,
         level: Int,
-        minXP: Int,
-        maxXP: Int,
+        minXpForCurrentLevel: Int,
+        maxXpForCurrentLevel: Int,
         currentXP: Int
     ): BufferedImage {
         return drawLevelCard(
             avatarBytes, avatarUrl, downloadFromUrl, username, rank, level,
-            minXP, maxXP, currentXP, DEFAULT_ACCENT_COLOR, DEFAULT_WIDTH, DEFAULT_HEIGHT
+            minXpForCurrentLevel, maxXpForCurrentLevel, currentXP, DEFAULT_ACCENT_COLOR, DEFAULT_WIDTH, DEFAULT_HEIGHT
         )
     }
 
@@ -163,8 +163,8 @@ object LevelCardDrawer {
         private var downloadFromUrl: Boolean = false
         private var rank: Int = 1
         private var level: Int = 1
-        private var minXP: Int = 0
-        private var maxXP: Int = 100
+        private var minXpForCurrentLevel: Int = 0
+        private var maxXpForCurrentLevel: Int = 100
         private var currentXP: Int = 0
         private var accentColor: Int = DEFAULT_ACCENT_COLOR
         private var width: Int = DEFAULT_WIDTH
@@ -239,14 +239,14 @@ object LevelCardDrawer {
         /**
          * Sets the XP values.
          *
-         * @param minXP Minimum XP for the current level
-         * @param maxXP Maximum XP for the current level
+         * @param minXpForCurrentLevel Minimum XP for the current level
+         * @param maxXpForCurrentLevel Maximum XP for the current level
          * @param currentXP Current XP of the user
          * @return This builder for chaining
          */
-        fun xp(minXP: Int, maxXP: Int, currentXP: Int): Builder {
-            this.minXP = minXP
-            this.maxXP = maxXP
+        fun xp(minXpForCurrentLevel: Int, maxXpForCurrentLevel: Int, currentXP: Int): Builder {
+            this.minXpForCurrentLevel = minXpForCurrentLevel
+            this.maxXpForCurrentLevel = maxXpForCurrentLevel
             this.currentXP = currentXP
             return this
         }
@@ -319,7 +319,7 @@ object LevelCardDrawer {
             val userDataBuilder = UserData.Builder(username)
                 .rank(rank)
                 .level(level)
-                .xp(minXP, maxXP, currentXP)
+                .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
                 .onlineStatus(onlineStatus)
                 .showStatusIndicator(showStatusIndicator)
 
