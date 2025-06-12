@@ -24,6 +24,8 @@ dependencies {
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:$skikoVersion")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    
+    implementation("net.dv8tion:JDA:5.6.1")
 
     testImplementation(platform("org.junit:junit-bom:5.13.1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
@@ -51,4 +53,3 @@ tasks.register<Jar>("fatJar") {
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
 }
-
