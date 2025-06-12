@@ -32,7 +32,7 @@ jobs:
     
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results
         path: build/reports/tests/
@@ -41,12 +41,11 @@ jobs:
       run: ./gradlew fatJar
     
     - name: Upload fat JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: levelcard-lib-all
         path: build/libs/*-all.jar
 
-  # Add a separate job for different OS testing
   test-on-windows:
     runs-on: windows-latest
     
@@ -65,7 +64,7 @@ jobs:
     
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-windows
         path: build/reports/tests/
