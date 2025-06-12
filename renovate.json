@@ -1,11 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "dependencyDashboard": true,
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "timezone": "Europe/Berlin",
   "prCreation": "immediate",
-  "requiredStatusChecks": null,
+  "ignoreTests": true,
   "automerge": true,
   "automergeType": "pr",
   "gradle": {
@@ -13,30 +17,44 @@
   },
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true,
       "automergeType": "pr"
     },
     {
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "groupName": "major updates"
     },
     {
-      "matchPackagePatterns": ["org.jetbrains.kotlin.*"],
       "groupName": "Kotlin core",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": [
+        "/org.jetbrains.kotlin.*/"
+      ]
     },
     {
-      "matchPackagePatterns": ["org.jetbrains.skiko.*"],
-      "groupName": "Skiko platform libraries"
+      "groupName": "Skiko platform libraries",
+      "matchPackageNames": [
+        "/org.jetbrains.skiko.*/"
+      ]
     },
     {
-      "matchDepTypes": ["testImplementation"],
+      "matchDepTypes": [
+        "testImplementation"
+      ],
       "groupName": "test dependencies",
       "automerge": true
     },
     {
-      "matchDepTypes": ["kapt", "annotationProcessor"],
+      "matchDepTypes": [
+        "kapt",
+        "annotationProcessor"
+      ],
       "groupName": "code generation tools"
     }
   ],
