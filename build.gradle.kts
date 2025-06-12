@@ -15,7 +15,7 @@ repositories {
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
-val skikoVersion = "0.9.18+debug"
+val skikoVersion = "0.9.18"
 dependencies {
     implementation("org.jetbrains.skiko:skiko:$skikoVersion")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skikoVersion")
