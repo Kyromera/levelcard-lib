@@ -4,7 +4,6 @@
   "dependencyDashboard": true,
   "labels": ["dependencies"],
   "timezone": "Europe/Berlin",
-  "schedule": ["after 9am and before 5pm on weekdays"],
   "prCreation": "immediate",
   "requiredStatusChecks": null,
   "automerge": true,
