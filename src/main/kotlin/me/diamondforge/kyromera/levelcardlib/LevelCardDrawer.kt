@@ -10,7 +10,17 @@ object LevelCardDrawer {
     // Default values
     private const val DEFAULT_WIDTH = 950
     private const val DEFAULT_HEIGHT = 300
-    private const val DEFAULT_ACCENT_COLOR = 0xFFEA397C.toInt() // Pink
+    private const val DEFAULT_ACCENT_COLOR = 0xFF2CBCC9.toInt() // Cryo Blue
+
+    /**
+     * Creates a new builder for creating level cards.
+     *
+     * @param username Username to display on the card
+     * @return A new Builder instance
+     */
+    fun builder(username: String): Builder {
+        return Builder(username)
+    }
 
     /**
      * Draws a level card with the specified parameters.
@@ -43,17 +53,14 @@ object LevelCardDrawer {
         width: Int,
         height: Int
     ): BufferedImage {
-        // Create UserData object
-        val userData = createUserData(avatarBytes, avatarUrl, downloadFromUrl, username, rank, level, minXP, maxXP, currentXP)
-
-        // Create CardConfiguration object
-        val config = CardConfiguration.Builder()
-            .dimensions(width, height)
+        return builder(username)
+            .avatarSource(avatarBytes, avatarUrl, downloadFromUrl)
+            .rank(rank)
+            .level(level)
+            .xp(minXP, maxXP, currentXP)
             .accentColor(accentColor)
+            .dimensions(width, height)
             .build()
-
-        // Render the card
-        return CardRenderer.renderCard(userData, config)
     }
 
     /**
@@ -93,34 +100,17 @@ object LevelCardDrawer {
         showStatusIndicator: Boolean,
         showGenerationTime: Boolean
     ): BufferedImage {
-        // Create UserData object with online status
-        val userDataBuilder = UserData.Builder(username)
+        return builder(username)
+            .avatarSource(avatarBytes, avatarUrl, downloadFromUrl)
             .rank(rank)
             .level(level)
             .xp(minXP, maxXP, currentXP)
+            .accentColor(accentColor)
+            .dimensions(width, height)
             .onlineStatus(onlineStatus)
             .showStatusIndicator(showStatusIndicator)
-
-        // Set avatar source
-        if (downloadFromUrl && !avatarUrl.isNullOrEmpty()) {
-            userDataBuilder.avatarUrl(avatarUrl)
-        } else if (avatarBytes != null) {
-            userDataBuilder.avatarBytes(avatarBytes)
-        } else {
-            throw IllegalArgumentException("Either avatarBytes must be provided or avatarUrl with downloadFromUrl=true")
-        }
-
-        val userData = userDataBuilder.build()
-
-        // Create CardConfiguration object
-        val config = CardConfiguration.Builder()
-            .dimensions(width, height)
-            .accentColor(accentColor)
             .showGenerationTime(showGenerationTime)
             .build()
-
-        // Render the card
-        return CardRenderer.renderCard(userData, config)
     }
 
     /**
@@ -165,33 +155,197 @@ object LevelCardDrawer {
     }
 
     /**
-     * Helper method to create a UserData object from the parameters.
+     * Builder class for creating level cards.
      */
-    private fun createUserData(
-        avatarBytes: ByteArray?,
-        avatarUrl: String?,
-        downloadFromUrl: Boolean,
-        username: String,
-        rank: Int,
-        level: Int,
-        minXP: Int,
-        maxXP: Int,
-        currentXP: Int
-    ): UserData {
-        val builder = UserData.Builder(username)
-            .rank(rank)
-            .level(level)
-            .xp(minXP, maxXP, currentXP)
+    class Builder(private val username: String) {
+        private var avatarBytes: ByteArray? = null
+        private var avatarUrl: String? = null
+        private var downloadFromUrl: Boolean = false
+        private var rank: Int = 1
+        private var level: Int = 1
+        private var minXP: Int = 0
+        private var maxXP: Int = 100
+        private var currentXP: Int = 0
+        private var accentColor: Int = DEFAULT_ACCENT_COLOR
+        private var width: Int = DEFAULT_WIDTH
+        private var height: Int = DEFAULT_HEIGHT
+        private var onlineStatus: OnlineStatus = OnlineStatus.ONLINE
+        private var showStatusIndicator: Boolean = true
+        private var showGenerationTime: Boolean = false
 
-        // Set avatar source
-        if (downloadFromUrl && !avatarUrl.isNullOrEmpty()) {
-            builder.avatarUrl(avatarUrl)
-        } else if (avatarBytes != null) {
-            builder.avatarBytes(avatarBytes)
-        } else {
-            throw IllegalArgumentException("Either avatarBytes must be provided or avatarUrl with downloadFromUrl=true")
+        /**
+         * Sets the avatar source.
+         *
+         * @param avatarBytes Byte array of the avatar image, can be null if avatarUrl is provided
+         * @param avatarUrl URL of the avatar image, can be null if avatarBytes is provided
+         * @param downloadFromUrl Whether to download the avatar from the URL
+         * @return This builder for chaining
+         */
+        fun avatarSource(avatarBytes: ByteArray?, avatarUrl: String?, downloadFromUrl: Boolean): Builder {
+            this.avatarBytes = avatarBytes
+            this.avatarUrl = avatarUrl
+            this.downloadFromUrl = downloadFromUrl
+            return this
         }
 
-        return builder.build()
+        /**
+         * Sets the avatar from a byte array.
+         *
+         * @param avatarBytes Byte array of the avatar image
+         * @return This builder for chaining
+         */
+        fun avatarBytes(avatarBytes: ByteArray): Builder {
+            this.avatarBytes = avatarBytes
+            this.avatarUrl = null
+            this.downloadFromUrl = false
+            return this
+        }
+
+        /**
+         * Sets the avatar from a URL.
+         *
+         * @param avatarUrl URL of the avatar image
+         * @return This builder for chaining
+         */
+        fun avatarUrl(avatarUrl: String): Builder {
+            this.avatarBytes = null
+            this.avatarUrl = avatarUrl
+            this.downloadFromUrl = true
+            return this
+        }
+
+        /**
+         * Sets the user's rank.
+         *
+         * @param rank User's rank
+         * @return This builder for chaining
+         */
+        fun rank(rank: Int): Builder {
+            this.rank = rank
+            return this
+        }
+
+        /**
+         * Sets the user's level.
+         *
+         * @param level User's level
+         * @return This builder for chaining
+         */
+        fun level(level: Int): Builder {
+            this.level = level
+            return this
+        }
+
+        /**
+         * Sets the XP values.
+         *
+         * @param minXP Minimum XP for the current level
+         * @param maxXP Maximum XP for the current level
+         * @param currentXP Current XP of the user
+         * @return This builder for chaining
+         */
+        fun xp(minXP: Int, maxXP: Int, currentXP: Int): Builder {
+            this.minXP = minXP
+            this.maxXP = maxXP
+            this.currentXP = currentXP
+            return this
+        }
+
+        /**
+         * Sets the accent color.
+         *
+         * @param accentColor Accent color for the card (ARGB format)
+         * @return This builder for chaining
+         */
+        fun accentColor(accentColor: Int): Builder {
+            this.accentColor = accentColor
+            return this
+        }
+
+        /**
+         * Sets the card dimensions.
+         *
+         * @param width Width of the card
+         * @param height Height of the card
+         * @return This builder for chaining
+         */
+        fun dimensions(width: Int, height: Int): Builder {
+            this.width = width
+            this.height = height
+            return this
+        }
+
+        /**
+         * Sets the online status.
+         *
+         * @param onlineStatus The online status to display
+         * @return This builder for chaining
+         */
+        fun onlineStatus(onlineStatus: OnlineStatus): Builder {
+            this.onlineStatus = onlineStatus
+            return this
+        }
+
+        /**
+         * Sets whether to show the status indicator.
+         *
+         * @param showStatusIndicator Whether to show the status indicator
+         * @return This builder for chaining
+         */
+        fun showStatusIndicator(showStatusIndicator: Boolean): Builder {
+            this.showStatusIndicator = showStatusIndicator
+            return this
+        }
+
+        /**
+         * Sets whether to show generation time on the card.
+         *
+         * @param showGenerationTime Whether to show generation time
+         * @return This builder for chaining
+         */
+        fun showGenerationTime(showGenerationTime: Boolean): Builder {
+            this.showGenerationTime = showGenerationTime
+            return this
+        }
+
+        /**
+         * Builds and returns the level card.
+         *
+         * @return The generated level card as a BufferedImage
+         * @throws IllegalArgumentException if no avatar source is provided
+         */
+        fun build(): BufferedImage {
+            // Create UserData object
+            val userDataBuilder = UserData.Builder(username)
+                .rank(rank)
+                .level(level)
+                .xp(minXP, maxXP, currentXP)
+                .onlineStatus(onlineStatus)
+                .showStatusIndicator(showStatusIndicator)
+
+            // Set avatar source
+            val localAvatarUrl = avatarUrl
+            val localAvatarBytes = avatarBytes
+
+            if (downloadFromUrl && !localAvatarUrl.isNullOrEmpty()) {
+                userDataBuilder.avatarUrl(localAvatarUrl)
+            } else if (localAvatarBytes != null) {
+                userDataBuilder.avatarBytes(localAvatarBytes)
+            } else {
+                throw IllegalArgumentException("Either avatarBytes must be provided or avatarUrl with downloadFromUrl=true")
+            }
+
+            val userData = userDataBuilder.build()
+
+            // Create CardConfiguration object
+            val config = CardConfiguration.Builder()
+                .dimensions(width, height)
+                .accentColor(accentColor)
+                .showGenerationTime(showGenerationTime)
+                .build()
+
+            // Render the card
+            return CardRenderer.renderCard(userData, config)
+        }
     }
 }

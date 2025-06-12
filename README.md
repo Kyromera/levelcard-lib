@@ -51,32 +51,49 @@ dependencies {
 
 ## Usage
 
-The library provides functionality for creating level cards. Here's a basic example:
+The library provides functionality for creating level cards. Here's a basic example using the Builder pattern:
 
 ```kotlin
-import me.diamondforge.kyromera.levelcardlib.CardConfiguration
-import me.diamondforge.kyromera.levelcardlib.CardRenderer
-import me.diamondforge.kyromera.levelcardlib.UserData
-
-// Create user data
-val userData = UserData.Builder()
-    .setUsername("Username")
-    .setLevel(10)
-    .setXp(1500)
-    .setMaxXp(2000)
+// Create and render a level card using the Builder pattern
+val levelCard = LevelCardDrawer.builder("Username")
+    .avatarBytes(avatarImageBytes) // or .avatarUrl("https://example.com/avatar.png")
+    .rank(5)
+    .level(10)
+    .xp(1500, 2000, 1750) // minXP, maxXP, currentXP
+    .accentColor(0xFFEA397C.toInt()) // Pink color
+    .dimensions(950, 300) // width, height
+    .onlineStatus(OnlineStatus.ONLINE)
+    .showStatusIndicator(true)
+    .showGenerationTime(false)
     .build()
 
-// Create card configuration
-val config = CardConfiguration.Builder()
-    .setWidth(800)
-    .setHeight(300)
-    .build()
+// Save the image
+ImageIO.write(levelCard, "PNG", File("levelcard.png"))
+```
 
-// Render the card
-val cardRenderer = CardRenderer(config)
-val image = cardRenderer.renderCard(userData)
+### Legacy API
 
-// Save or display the image
+The library also supports a legacy API for backward compatibility:
+
+```kotlin
+// Generate a level card using the legacy API
+val levelCard = LevelCardDrawer.drawLevelCard(
+    avatarBytes = avatarImageBytes,
+    avatarUrl = null,
+    downloadFromUrl = false,
+    username = "Username",
+    rank = 5,
+    level = 10,
+    minXP = 1500,
+    maxXP = 2000,
+    currentXP = 1750,
+    accentColor = 0xFFEA397C.toInt(),
+    width = 950,
+    height = 300,
+    onlineStatus = OnlineStatus.ONLINE,
+    showStatusIndicator = true,
+    showGenerationTime = false
+)
 ```
 
 For more detailed examples, see the `LevelCardApp` class in the source code.

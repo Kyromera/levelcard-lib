@@ -320,24 +320,22 @@ class LevelCardApp : JFrame() {
             val showStatusIndicator = showStatusIndicatorCheckBox.isSelected
             val showGenerationTime = showGenerationTimeCheckBox.isSelected
 
-            // Generate the level card with new features
-            cardImage = LevelCardDrawer.drawLevelCard(
-                if (useUrl) null else avatarBytes,
-                if (useUrl) avatarUrl else null,
-                useUrl,
-                username,
-                rank,
-                level,
-                minXP,
-                maxXP,
-                currentXP,
-                accentColor,
-                width,
-                height,
-                onlineStatus,
-                showStatusIndicator,
-                showGenerationTime
-            )
+            // Generate the level card with new features using the Builder pattern
+            cardImage = LevelCardDrawer.builder(username)
+                .avatarSource(
+                    if (useUrl) null else avatarBytes,
+                    if (useUrl) avatarUrl else null,
+                    useUrl
+                )
+                .rank(rank)
+                .level(level)
+                .xp(minXP, maxXP, currentXP)
+                .accentColor(accentColor)
+                .dimensions(width, height)
+                .onlineStatus(onlineStatus)
+                .showStatusIndicator(showStatusIndicator)
+                .showGenerationTime(showGenerationTime)
+                .build()
 
             // Display the card
             val cardLabel = JLabel(ImageIcon(cardImage))
