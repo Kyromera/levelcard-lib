@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
 }
 
-group = "me.diamondforge.kyromera"
+group = "me.diamondforge"
 version = "1.0.0"
 
 application {
