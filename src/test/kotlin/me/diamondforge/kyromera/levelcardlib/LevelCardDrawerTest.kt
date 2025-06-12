@@ -37,8 +37,8 @@ class LevelCardDrawerTest {
             username = "TestUser",
             rank = 5,
             level = 10,
-            minXP = 100,
-            maxXP = 200,
+            minXpForCurrentLevel = 100,
+            maxXpForCurrentLevel = 200,
             currentXP = 150,
             accentColor = 0xFFFF0000.toInt(),
             width = 800,
@@ -47,9 +47,9 @@ class LevelCardDrawerTest {
 
         // Basic assertions about the result
         assertNotNull(result)
-        assertEquals(800, result.width)
-        assertEquals(250, result.height)
-        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.type)
+        assertEquals(800, result.getWidth())
+        assertEquals(250, result.getHeight())
+        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.getType())
     }
 
     @Test
@@ -61,8 +61,8 @@ class LevelCardDrawerTest {
             username = "TestUser",
             rank = 5,
             level = 10,
-            minXP = 100,
-            maxXP = 200,
+            minXpForCurrentLevel = 100,
+            maxXpForCurrentLevel = 200,
             currentXP = 150,
             accentColor = 0xFFFF0000.toInt(),
             width = 800,
@@ -74,9 +74,9 @@ class LevelCardDrawerTest {
 
         // Basic assertions about the result
         assertNotNull(result)
-        assertEquals(800, result.width)
-        assertEquals(250, result.height)
-        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.type)
+        assertEquals(800, result.getWidth())
+        assertEquals(250, result.getHeight())
+        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.getType())
     }
 
     @Test
@@ -88,17 +88,17 @@ class LevelCardDrawerTest {
             username = "TestUser",
             rank = 5,
             level = 10,
-            minXP = 100,
-            maxXP = 200,
+            minXpForCurrentLevel = 100,
+            maxXpForCurrentLevel = 200,
             currentXP = 150,
             accentColor = 0xFFFF0000.toInt()
         )
 
         // Basic assertions about the result
         assertNotNull(result)
-        assertEquals(950, result.width) // Default width
-        assertEquals(300, result.height) // Default height
-        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.type)
+        assertEquals(950, result.getWidth()) // Default width
+        assertEquals(300, result.getHeight()) // Default height
+        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.getType())
     }
 
     @Test
@@ -110,16 +110,16 @@ class LevelCardDrawerTest {
             username = "TestUser",
             rank = 5,
             level = 10,
-            minXP = 100,
-            maxXP = 200,
+            minXpForCurrentLevel = 100,
+            maxXpForCurrentLevel = 200,
             currentXP = 150
         )
 
         // Basic assertions about the result
         assertNotNull(result)
-        assertEquals(950, result.width) // Default width
-        assertEquals(300, result.height) // Default height
-        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.type)
+        assertEquals(950, result.getWidth()) // Default width
+        assertEquals(300, result.getHeight()) // Default height
+        assertEquals(BufferedImage.TYPE_4BYTE_ABGR, result.getType())
     }
 
     @Test
@@ -132,8 +132,8 @@ class LevelCardDrawerTest {
                 username = "TestUser",
                 rank = 5,
                 level = 10,
-                minXP = 100,
-                maxXP = 200,
+                minXpForCurrentLevel = 100,
+                maxXpForCurrentLevel = 200,
                 currentXP = 150
             )
         }
@@ -151,8 +151,8 @@ class LevelCardDrawerTest {
                 username = "TestUser",
                 rank = 5,
                 level = 10,
-                minXP = 100,
-                maxXP = 200,
+                minXpForCurrentLevel = 100,
+                maxXpForCurrentLevel = 200,
                 currentXP = 150
             )
         }
@@ -169,8 +169,8 @@ class LevelCardDrawerTest {
             username = "TestUser",
             rank = 5,
             level = 10,
-            minXP = 100,
-            maxXP = 200,
+            minXpForCurrentLevel = 100,
+            maxXpForCurrentLevel = 200,
             currentXP = 150
         )
 
@@ -185,7 +185,7 @@ class LevelCardDrawerTest {
         // Verify we can read it back as an image
         val readImage = ImageIO.read(outputFile)
         assertNotNull(readImage)
-        assertEquals(result.width, readImage.width)
-        assertEquals(result.height, readImage.height)
+        assertEquals(result.getWidth(), readImage.getWidth())
+        assertEquals(result.getHeight(), readImage.getHeight())
     }
 }
