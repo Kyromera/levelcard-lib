@@ -42,8 +42,6 @@ class AvatarManagerTest {
             y = 50f,
             size = 100f,
             borderColor = 0xFFFF0000.toInt(), // Red
-            onlineStatus = OnlineStatus.ONLINE,
-            showStatusIndicator = true
         )
         
         // Should return true for successful drawing
@@ -59,8 +57,6 @@ class AvatarManagerTest {
             y = 50f,
             size = 100f,
             borderColor = 0xFFFF0000.toInt(), // Red
-            onlineStatus = OnlineStatus.ONLINE,
-            showStatusIndicator = true
         )
         
         // Should return false for null avatar bytes
@@ -76,8 +72,6 @@ class AvatarManagerTest {
             y = 50f,
             size = 100f,
             borderColor = 0xFFFF0000.toInt(), // Red
-            onlineStatus = OnlineStatus.ONLINE,
-            showStatusIndicator = false
         )
         
         // Should return true for successful drawing
@@ -93,33 +87,12 @@ class AvatarManagerTest {
             y = 50f,
             size = 100f,
             borderColor = 0xFFFF0000.toInt(), // Red
-            onlineStatus = null,
-            showStatusIndicator = true
         )
         
         // Should return true for successful drawing
         assertTrue(result)
     }
     
-    @Test
-    fun `test drawAvatar with different online statuses`() {
-        // Test with each online status
-        for (status in OnlineStatus.values()) {
-            val result = AvatarManager.drawAvatar(
-                canvas = testCanvas,
-                avatarBytes = testAvatarBytes,
-                x = 50f,
-                y = 50f,
-                size = 100f,
-                borderColor = 0xFFFF0000.toInt(), // Red
-                onlineStatus = status,
-                showStatusIndicator = true
-            )
-            
-            // Should return true for successful drawing
-            assertTrue(result, "Failed to draw avatar with status: $status")
-        }
-    }
     
     @Test
     fun `test drawAvatar with invalid image data`() {
@@ -133,8 +106,6 @@ class AvatarManagerTest {
             y = 50f,
             size = 100f,
             borderColor = 0xFFFF0000.toInt(), // Red
-            onlineStatus = OnlineStatus.ONLINE,
-            showStatusIndicator = true
         )
         
         // Should return false for invalid image data

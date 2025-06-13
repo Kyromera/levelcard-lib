@@ -6,16 +6,17 @@ package me.diamondforge.kyromera.levelcardlib
  */
 data class UserData private constructor(
     val username: String,
-    val rank: Int,
+    val discriminator: String,
     val level: Int,
-    val minXpForCurrentLevel: Int,
-    val maxXpForCurrentLevel: Int,
+    val rank: Int,
     val currentXP: Int,
+    val nextLevelXP: Int,
+    val messagesCount: Int,
+    val voiceTime: String,
+    val streak: Int,
     val avatarBytes: ByteArray?,
     val avatarUrl: String?,
-    val imageMode: ImageMode,
-    val onlineStatus: OnlineStatus,
-    val showStatusIndicator: Boolean
+    val imageMode: ImageMode
 ) {
     // Override equals and hashCode because ByteArray uses reference equality by default
     override fun equals(other: Any?): Boolean {
@@ -25,35 +26,37 @@ data class UserData private constructor(
         other as UserData
 
         if (username != other.username) return false
-        if (rank != other.rank) return false
+        if (discriminator != other.discriminator) return false
         if (level != other.level) return false
-        if (minXpForCurrentLevel != other.minXpForCurrentLevel) return false
-        if (maxXpForCurrentLevel != other.maxXpForCurrentLevel) return false
+        if (rank != other.rank) return false
         if (currentXP != other.currentXP) return false
+        if (nextLevelXP != other.nextLevelXP) return false
+        if (messagesCount != other.messagesCount) return false
+        if (voiceTime != other.voiceTime) return false
+        if (streak != other.streak) return false
         if (avatarBytes != null) {
             if (other.avatarBytes == null) return false
             if (!avatarBytes.contentEquals(other.avatarBytes)) return false
         } else if (other.avatarBytes != null) return false
         if (avatarUrl != other.avatarUrl) return false
         if (imageMode != other.imageMode) return false
-        if (onlineStatus != other.onlineStatus) return false
-        if (showStatusIndicator != other.showStatusIndicator) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = username.hashCode()
-        result = 31 * result + rank
+        result = 31 * result + discriminator.hashCode()
         result = 31 * result + level
-        result = 31 * result + minXpForCurrentLevel
-        result = 31 * result + maxXpForCurrentLevel
+        result = 31 * result + rank
         result = 31 * result + currentXP
+        result = 31 * result + nextLevelXP
+        result = 31 * result + messagesCount
+        result = 31 * result + voiceTime.hashCode()
+        result = 31 * result + streak
         result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
         result = 31 * result + (avatarUrl?.hashCode() ?: 0)
         result = 31 * result + imageMode.hashCode()
-        result = 31 * result + onlineStatus.hashCode()
-        result = 31 * result + showStatusIndicator.hashCode()
         return result
     }
 
@@ -65,16 +68,28 @@ data class UserData private constructor(
             require(username.isNotEmpty()) { "Username cannot be null or empty" }
         }
 
+        private var discriminator: String = ""
         private var rank: Int = 1
         private var level: Int = 1
-        private var minXpForCurrentLevel: Int = 0
-        private var maxXpForCurrentLevel: Int = 100
         private var currentXP: Int = 0
+        private var nextLevelXP: Int = 100
+        private var messagesCount: Int = 0
+        private var voiceTime: String = ""
+        private var streak: Int = 0
         private var avatarBytes: ByteArray? = null
         private var avatarUrl: String? = null
         private var imageMode: ImageMode = ImageMode.LOCAL
-        private var onlineStatus: OnlineStatus = OnlineStatus.ONLINE
-        private var showStatusIndicator: Boolean = true
+
+        /**
+         * Sets the user's discriminator (the 4-digit number after the username).
+         *
+         * @param discriminator The discriminator
+         * @return This builder for chaining
+         */
+        fun discriminator(discriminator: String): Builder {
+            this.discriminator = discriminator
+            return this
+        }
 
         /**
          * Sets the user's rank.
@@ -103,18 +118,51 @@ data class UserData private constructor(
         /**
          * Sets the XP values.
          *
-         * @param minXpForCurrentLevel The minimum XP for the current level
-         * @param maxXpForCurrentLevel The maximum XP for the current level
          * @param currentXP The user's current XP
+         * @param nextLevelXP The XP required for the next level
          * @return This builder for chaining
          */
-        fun xp(minXpForCurrentLevel: Int, maxXpForCurrentLevel: Int, currentXP: Int): Builder {
-            require(minXpForCurrentLevel >= 0 && maxXpForCurrentLevel > minXpForCurrentLevel && currentXP >= minXpForCurrentLevel && currentXP <= maxXpForCurrentLevel) {
-                "Invalid XP values: minXpForCurrentLevel must be >= 0, maxXpForCurrentLevel > minXpForCurrentLevel, and minXpForCurrentLevel <= currentXP <= maxXpForCurrentLevel"
+        fun xp(currentXP: Int, nextLevelXP: Int): Builder {
+            require(currentXP >= 0 && nextLevelXP > 0 && currentXP <= nextLevelXP) {
+                "Invalid XP values: currentXP must be >= 0, nextLevelXP > 0, and currentXP <= nextLevelXP"
             }
-            this.minXpForCurrentLevel = minXpForCurrentLevel
-            this.maxXpForCurrentLevel = maxXpForCurrentLevel
             this.currentXP = currentXP
+            this.nextLevelXP = nextLevelXP
+            return this
+        }
+
+        /**
+         * Sets the user's message count.
+         *
+         * @param messagesCount The number of messages
+         * @return This builder for chaining
+         */
+        fun messagesCount(messagesCount: Int): Builder {
+            require(messagesCount >= 0) { "Messages count must be non-negative" }
+            this.messagesCount = messagesCount
+            return this
+        }
+
+        /**
+         * Sets the user's voice time.
+         *
+         * @param voiceTime The voice time as a formatted string (e.g., "127h")
+         * @return This builder for chaining
+         */
+        fun voiceTime(voiceTime: String): Builder {
+            this.voiceTime = voiceTime
+            return this
+        }
+
+        /**
+         * Sets the user's streak.
+         *
+         * @param streak The streak count
+         * @return This builder for chaining
+         */
+        fun streak(streak: Int): Builder {
+            require(streak >= 0) { "Streak must be non-negative" }
+            this.streak = streak
             return this
         }
 
@@ -144,27 +192,6 @@ data class UserData private constructor(
             return this
         }
 
-        /**
-         * Sets the online status.
-         *
-         * @param onlineStatus The online status
-         * @return This builder for chaining
-         */
-        fun onlineStatus(onlineStatus: OnlineStatus): Builder {
-            this.onlineStatus = onlineStatus
-            return this
-        }
-
-        /**
-         * Sets whether to show the status indicator.
-         *
-         * @param showStatusIndicator true to show the indicator, false to hide it
-         * @return This builder for chaining
-         */
-        fun showStatusIndicator(showStatusIndicator: Boolean): Builder {
-            this.showStatusIndicator = showStatusIndicator
-            return this
-        }
 
         /**
          * Builds the UserData instance.
@@ -184,16 +211,17 @@ data class UserData private constructor(
 
             return UserData(
                 username,
-                rank,
+                discriminator,
                 level,
-                minXpForCurrentLevel,
-                maxXpForCurrentLevel,
+                rank,
                 currentXP,
+                nextLevelXP,
+                messagesCount,
+                voiceTime,
+                streak,
                 avatarBytes,
                 avatarUrl,
-                imageMode,
-                onlineStatus,
-                showStatusIndicator
+                imageMode
             )
         }
     }

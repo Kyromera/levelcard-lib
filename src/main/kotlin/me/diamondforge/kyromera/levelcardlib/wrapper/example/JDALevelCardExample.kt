@@ -1,6 +1,5 @@
 package me.diamondforge.kyromera.levelcardlib.wrapper.example
 
-import me.diamondforge.kyromera.levelcardlib.OnlineStatus
 import me.diamondforge.kyromera.levelcardlib.wrapper.JDALevelCard
 import me.diamondforge.kyromera.levelcardlib.wrapper.createLevelCard
 import me.diamondforge.kyromera.levelcardlib.wrapper.sendLevelCard
@@ -79,7 +78,7 @@ class JDALevelCardExample {
                 rank = levelData.rank,
                 level = levelData.level,
                 currentXP = levelData.currentXP,
-                maxXpForCurrentLevel = levelData.maxXP,
+                nextLevelXP = levelData.maxXP,
                 content = "Here's your level card, ${member.effectiveName}!"
             )
         }
@@ -111,8 +110,7 @@ class JDALevelCardExample {
             val levelCard = levelCardBuilder
                 .rank(levelData.rank)
                 .level(levelData.level)
-                .xp(0, levelData.maxXP, levelData.currentXP)
-                .showGenerationTime(true)
+                .xp(levelData.currentXP, levelData.maxXP)
                 .build()
 
             // Convert to bytes and send
@@ -133,9 +131,7 @@ class JDALevelCardExample {
             val levelCard = JDALevelCard.builder(user)
                 .rank(5)
                 .level(10)
-                .xp(100, 500, 250)
-                .onlineStatus(OnlineStatus.ONLINE)
-                .showGenerationTime(true)
+                .xp(250, 500)
                 .build()
 
             // Save to file
@@ -143,27 +139,20 @@ class JDALevelCardExample {
         }
 
         /**
-         * Example method demonstrating advanced customization with a custom CardConfiguration
+         * Example method demonstrating advanced customization with custom colors
          */
         private fun saveCustomConfigCard(user: User) {
-            // Create a custom configuration
-            val customConfig = me.diamondforge.kyromera.levelcardlib.CardConfiguration.Builder()
-                .dimensions(1000, 350)
-                .accentColor(0xFF00FF00.toInt()) // Green
-                .avatarConfig(180, 45)
-                .textMargin(290)
-                .textOffsets(85, 135, 205, 270)
-                .progressBarConfig(35, 220, 55)
-                .fontSizes(48f, 34f, 28f, 21f)
-                .backgroundConfig(14f, 26f)
-                .build()
-
-            // Create a level card with the custom configuration
+            // Create a level card with custom colors and dimensions
             val levelCard = JDALevelCard.builder(user)
                 .rank(5)
                 .level(10)
-                .xp(100, 500, 250)
-                .customConfig(customConfig)
+                .xp(250, 500)
+                .dimensions(1000, 350)
+                .primaryColor(0xFF00FF00.toInt()) // Green primary color
+                .secondaryColor(0xFF80FF80.toInt()) // Light green for gradients
+                .backgroundColor(0xFF0F1729.toInt()) // Dark blue-gray background
+                .textColor(0xFFFFFFFF.toInt()) // White text
+                .accentColor(0xFF00FF00.toInt()) // Green accent color
                 .build()
 
             // Save to file

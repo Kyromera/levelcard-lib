@@ -1,9 +1,11 @@
 package me.diamondforge.kyromera.levelcardlib.wrapper
 
-import me.diamondforge.kyromera.levelcardlib.CardConfiguration
+import me.diamondforge.kyromera.levelcardlib.ColorConfig
+import me.diamondforge.kyromera.levelcardlib.LevelCard
 import me.diamondforge.kyromera.levelcardlib.LevelCardDrawer
-import me.diamondforge.kyromera.levelcardlib.OnlineStatus
 import me.diamondforge.kyromera.levelcardlib.UserData
+import me.diamondforge.kyromera.levelcardlib.ImageMode
+import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.User
 import java.awt.image.BufferedImage
@@ -11,9 +13,11 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.URL
 import javax.imageio.ImageIO
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Surface
 
 /**
- * A wrapper class for the LevelCardDrawer that provides easy integration with JDA.
+ * A wrapper class for the LevelCard that provides easy integration with JDA.
  * This class simplifies the process of creating level cards for Discord users.
  */
 object JDALevelCard {
@@ -45,20 +49,24 @@ object JDALevelCard {
     class Builder {
         private val user: User
         private val username: String
+        private var discriminator: String = ""
         private var member: Member? = null
         private var rank: Int = 1
         private var level: Int = 1
-        private var minXpForCurrentLevel: Int = 0
-        private var maxXpForCurrentLevel: Int = 100
         private var currentXP: Int = 0
-        private var accentColor: Int? = null
-        private var width: Int = 950
-        private var height: Int = 300
+        private var nextLevelXP: Int = 100
+        private var messagesCount: Int = 0
+        private var voiceTime: String = ""
+        private var streak: Int = 0
+        private var primaryColor: Int = 0xFF00A9FF.toInt()  // Default Kryo blue
+        private var secondaryColor: Int = 0xFF80CFFF.toInt() // Lighter blue
+        private var backgroundColor: Int = 0xFF0F1729.toInt() // Dark blue-gray
+        private var textColor: Int = 0xFFFFFFFF.toInt() // White
+        private var accentColor: Int = 0xFF00A9FF.toInt() // Same as primary by default
+        private var width: Int = LevelCard.DEFAULT_WIDTH
+        private var height: Int = LevelCard.DEFAULT_HEIGHT
         private var showStatusIndicator: Boolean = true
-        private var showGenerationTime: Boolean = false
         private var downloadAvatar: Boolean = true
-        private var customOnlineStatus: OnlineStatus? = null
-        private var customConfig: CardConfiguration? = null
 
         /**
          * Creates a builder for a JDA User.
@@ -68,6 +76,7 @@ object JDALevelCard {
         constructor(user: User) {
             this.user = user
             this.username = user.name
+            this.discriminator = user.discriminator
         }
 
         /**
@@ -79,11 +88,15 @@ object JDALevelCard {
         constructor(member: Member) {
             this.user = member.user
             this.username = member.effectiveName
+            this.discriminator = member.user.discriminator
             this.member = member
 
-            // If the member has a color, use it as the accent color
+            // If the member has a color, use it as the primary and accent color
             if (member.colorRaw != 0) {
+                this.primaryColor = member.colorRaw
                 this.accentColor = member.colorRaw
+                // Generate a lighter secondary color
+                this.secondaryColor = adjustColor(member.colorRaw, 1.3f)
             }
         }
 
@@ -114,18 +127,95 @@ object JDALevelCard {
         /**
          * Sets the XP values.
          *
-         * @param minXpForCurrentLevel Minimum XP for the current level
-         * @param maxXpForCurrentLevel Maximum XP for the current level
          * @param currentXP Current XP of the user
+         * @param nextLevelXP XP required for the next level
          * @return This builder for chaining
          */
-        fun xp(minXpForCurrentLevel: Int, maxXpForCurrentLevel: Int, currentXP: Int): Builder {
-            require(minXpForCurrentLevel >= 0 && maxXpForCurrentLevel > minXpForCurrentLevel && currentXP >= minXpForCurrentLevel && currentXP <= maxXpForCurrentLevel) {
-                "Invalid XP values: minXpForCurrentLevel must be >= 0, maxXpForCurrentLevel > minXpForCurrentLevel, and minXpForCurrentLevel <= currentXP <= maxXpForCurrentLevel"
+        fun xp(currentXP: Int, nextLevelXP: Int): Builder {
+            require(currentXP >= 0 && nextLevelXP > 0 && currentXP <= nextLevelXP) {
+                "Invalid XP values: currentXP must be >= 0, nextLevelXP > 0, and currentXP <= nextLevelXP"
             }
-            this.minXpForCurrentLevel = minXpForCurrentLevel
-            this.maxXpForCurrentLevel = maxXpForCurrentLevel
             this.currentXP = currentXP
+            this.nextLevelXP = nextLevelXP
+            return this
+        }
+
+        /**
+         * Sets the user's message count.
+         *
+         * @param messagesCount The number of messages
+         * @return This builder for chaining
+         */
+        fun messagesCount(messagesCount: Int): Builder {
+            require(messagesCount >= 0) { "Messages count must be non-negative" }
+            this.messagesCount = messagesCount
+            return this
+        }
+
+        /**
+         * Sets the user's voice time.
+         *
+         * @param voiceTime The voice time as a formatted string (e.g., "127h")
+         * @return This builder for chaining
+         */
+        fun voiceTime(voiceTime: String): Builder {
+            this.voiceTime = voiceTime
+            return this
+        }
+
+        /**
+         * Sets the user's streak.
+         *
+         * @param streak The streak count
+         * @return This builder for chaining
+         */
+        fun streak(streak: Int): Builder {
+            require(streak >= 0) { "Streak must be non-negative" }
+            this.streak = streak
+            return this
+        }
+
+        /**
+         * Sets the primary color.
+         *
+         * @param primaryColor Primary color for the card (ARGB format)
+         * @return This builder for chaining
+         */
+        fun primaryColor(primaryColor: Int): Builder {
+            this.primaryColor = primaryColor
+            return this
+        }
+
+        /**
+         * Sets the secondary color.
+         *
+         * @param secondaryColor Secondary color for the card (ARGB format)
+         * @return This builder for chaining
+         */
+        fun secondaryColor(secondaryColor: Int): Builder {
+            this.secondaryColor = secondaryColor
+            return this
+        }
+
+        /**
+         * Sets the background color.
+         *
+         * @param backgroundColor Background color for the card (ARGB format)
+         * @return This builder for chaining
+         */
+        fun backgroundColor(backgroundColor: Int): Builder {
+            this.backgroundColor = backgroundColor
+            return this
+        }
+
+        /**
+         * Sets the text color.
+         *
+         * @param textColor Text color for the card (ARGB format)
+         * @return This builder for chaining
+         */
+        fun textColor(textColor: Int): Builder {
+            this.textColor = textColor
             return this
         }
 
@@ -166,32 +256,6 @@ object JDALevelCard {
         }
 
         /**
-         * Sets whether to show generation time on the card.
-         *
-         * @param showGenerationTime Whether to show generation time
-         * @return This builder for chaining
-         */
-        fun showGenerationTime(showGenerationTime: Boolean): Builder {
-            this.showGenerationTime = showGenerationTime
-            return this
-        }
-
-        /**
-         * Sets a custom card configuration.
-         * This allows for more detailed customization of the card appearance.
-         * If provided, this configuration will be used instead of creating a default one.
-         * Note that dimensions, accent color, and showGenerationTime settings from this builder
-         * will still be applied to the custom configuration if they were set.
-         *
-         * @param config The custom card configuration
-         * @return This builder for chaining
-         */
-        fun customConfig(config: CardConfiguration): Builder {
-            this.customConfig = config
-            return this
-        }
-
-        /**
          * Sets whether to download the avatar from Discord.
          * If set to false, the avatar URL will be used directly.
          *
@@ -202,18 +266,7 @@ object JDALevelCard {
             this.downloadAvatar = downloadAvatar
             return this
         }
-
-        /**
-         * Sets a custom online status for the user.
-         * This overrides the status that would be determined from the Member object.
-         *
-         * @param status The online status to use
-         * @return This builder for chaining
-         */
-        fun onlineStatus(status: OnlineStatus): Builder {
-            this.customOnlineStatus = status
-            return this
-        }
+        
 
         /**
          * Builds and returns the level card.
@@ -221,76 +274,27 @@ object JDALevelCard {
          * @return The generated level card as a BufferedImage
          */
         fun build(): BufferedImage {
-            // Determine online status from available sources
-            val onlineStatus = determineOnlineStatus()
-
             // Get the effective avatar URL (with size parameter for better quality)
             val avatarUrl = user.effectiveAvatarUrl + "?size=256"
 
-            // Create or use the card configuration
-            val config = if (customConfig != null) {
-                // If we have a custom config, apply any explicitly set values from the builder
-                val configBuilder = CardConfiguration.Builder()
-
-                // Start with the custom config
-                val tempConfig = customConfig!!
-
-                // Apply dimensions if they were explicitly set
-                if (width != 950 || height != 300) {
-                    configBuilder.dimensions(width, height)
-                } else {
-                    configBuilder.dimensions(tempConfig.width, tempConfig.height)
-                }
-
-                // Apply accent color if it was explicitly set
-                if (accentColor != null) {
-                    configBuilder.accentColor(accentColor!!)
-                } else {
-                    configBuilder.accentColor(tempConfig.accentColor)
-                }
-
-                // Apply showGenerationTime
-                configBuilder.showGenerationTime(showGenerationTime)
-
-                // Copy all other properties from the custom config
-                configBuilder
-                    .avatarConfig(tempConfig.avatarSize, tempConfig.avatarMargin)
-                    .textMargin(tempConfig.textMargin)
-                    .textOffsets(
-                        tempConfig.usernameYOffset,
-                        tempConfig.rankLevelYOffset,
-                        tempConfig.xpTextYOffset,
-                        tempConfig.timeTextYOffset
-                    )
-                    .progressBarConfig(
-                        tempConfig.progressBarHeight,
-                        tempConfig.progressBarYOffset,
-                        tempConfig.progressBarMargin
-                    )
-                    .fontSizes(
-                        tempConfig.usernameFontSize,
-                        tempConfig.rankLevelFontSize,
-                        tempConfig.xpFontSize,
-                        tempConfig.timeFontSize
-                    )
-                    .backgroundConfig(tempConfig.shadowBlur, tempConfig.cornerRadius)
-                    .build()
-            } else {
-                // Create a default configuration
-                CardConfiguration.Builder()
-                    .dimensions(width, height)
-                    .accentColor(accentColor ?: 0xFF2CBCC9.toInt()) // Use provided color or default
-                    .showGenerationTime(showGenerationTime)
-                    .build()
-            }
+            // Create the color configuration
+            val colorConfig = ColorConfig(
+                primaryColor = primaryColor,
+                secondaryColor = secondaryColor,
+                backgroundColor = backgroundColor,
+                textColor = textColor,
+                accentColor = accentColor
+            )
 
             // Create the user data
             val userDataBuilder = UserData.Builder(username)
+                .discriminator(discriminator)
                 .rank(rank)
                 .level(level)
-                .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
-                .onlineStatus(onlineStatus)
-                .showStatusIndicator(showStatusIndicator)
+                .xp(currentXP, nextLevelXP)
+                .messagesCount(messagesCount)
+                .voiceTime(voiceTime)
+                .streak(streak)
 
             // Handle avatar
             if (downloadAvatar) {
@@ -309,60 +313,35 @@ object JDALevelCard {
 
             val userData = userDataBuilder.build()
 
-            // Use the LevelCardDrawer to create the card
-            return LevelCardDrawer.builder(username)
-                .avatarSource(
-                    userData.avatarBytes,
-                    userData.avatarUrl,
-                    userData.imageMode == me.diamondforge.kyromera.levelcardlib.ImageMode.DOWNLOAD
-                )
-                .rank(userData.rank)
-                .level(userData.level)
-                .xp(userData.minXpForCurrentLevel, userData.maxXpForCurrentLevel, userData.currentXP)
-                .accentColor(config.accentColor)
-                .dimensions(config.width, config.height)
-                .onlineStatus(userData.onlineStatus)
-                .showStatusIndicator(userData.showStatusIndicator)
-                .showGenerationTime(config.showGenerationTime)
-                .build()
-        }
-
-        /**
-         * Determines the online status to use for the level card.
-         * Priority order:
-         * 1. Custom status set via onlineStatus()
-         * 2. Status from Member object if available
-         * 3. Default to ONLINE
-         *
-         * @return The determined OnlineStatus
-         */
-        private fun determineOnlineStatus(): OnlineStatus {
-            // If custom status is set, use it
-            customOnlineStatus?.let { return it }
-
-            // If member is available, get status from it
-            member?.let {
-                return mapJDAStatus(it.onlineStatus)
-            }
-
-            // Default to ONLINE
-            return OnlineStatus.ONLINE
-        }
-
-        /**
-         * Maps JDA's online status to the library's OnlineStatus enum.
-         *
-         * @param jdaStatus JDA's online status
-         * @return Corresponding library OnlineStatus
-         */
-        private fun mapJDAStatus(jdaStatus: net.dv8tion.jda.api.OnlineStatus): OnlineStatus {
-            return when (jdaStatus) {
-                net.dv8tion.jda.api.OnlineStatus.ONLINE -> OnlineStatus.ONLINE
-                net.dv8tion.jda.api.OnlineStatus.IDLE -> OnlineStatus.IDLE
-                net.dv8tion.jda.api.OnlineStatus.DO_NOT_DISTURB -> OnlineStatus.DND
-                else -> OnlineStatus.OFFLINE
+            // Create and render the level card
+            val levelCard = LevelCard(userData, colorConfig)
+            
+            // Create a surface to render to
+            val surface = Surface.makeRasterN32Premul(width, height)
+            val canvas = surface.canvas
+            
+            // Draw the level card
+            levelCard.draw(canvas, width, height)
+            
+            // Convert to BufferedImage
+            val image = surface.makeImageSnapshot()
+            val pngData = image.encodeToData(EncodedImageFormat.PNG)
+                ?: throw RuntimeException("Failed to encode image to PNG")
+            
+            try {
+                val inputStream = java.io.ByteArrayInputStream(pngData.bytes)
+                val bufferedImage = javax.imageio.ImageIO.read(inputStream)
+                
+                // Clean up
+                surface.close()
+                
+                return bufferedImage
+            } catch (e: java.io.IOException) {
+                surface.close()
+                throw RuntimeException("Failed to convert Skia image to BufferedImage", e)
             }
         }
+        
 
         /**
          * Downloads an avatar image from a URL and converts it to a byte array.
@@ -381,6 +360,22 @@ object JDALevelCard {
             val outputStream = ByteArrayOutputStream()
             ImageIO.write(image, "png", outputStream)
             return outputStream.toByteArray()
+        }
+        
+        /**
+         * Helper function to adjust color brightness.
+         * 
+         * @param color The color to adjust
+         * @param factor The brightness factor (> 1.0 for lighter, < 1.0 for darker)
+         * @return The adjusted color
+         */
+        private fun adjustColor(color: Int, factor: Float): Int {
+            val a = color and 0xFF000000.toInt()
+            val r = ((color and 0x00FF0000) shr 16) * factor
+            val g = ((color and 0x0000FF00) shr 8) * factor
+            val b = (color and 0x000000FF) * factor
+
+            return a or ((r.toInt() shl 16) and 0x00FF0000) or ((g.toInt() shl 8) and 0x0000FF00) or (b.toInt() and 0x000000FF)
         }
     }
 }

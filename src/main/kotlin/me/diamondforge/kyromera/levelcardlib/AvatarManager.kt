@@ -61,8 +61,6 @@ object AvatarManager {
         y: Float,
         size: Float,
         borderColor: Int,
-        onlineStatus: OnlineStatus?,
-        showStatusIndicator: Boolean
     ): Boolean {
         if (avatarBytes == null) {
             return false
@@ -102,11 +100,6 @@ object AvatarManager {
             )
             canvas.restore()
 
-            // Draw online status indicator if enabled
-            if (onlineStatus != null && showStatusIndicator) {
-                drawStatusIndicator(canvas, x, y, size, onlineStatus)
-            }
-
             true
         } catch (e: Exception) {
             System.err.println("Failed to load avatar image: ${e.message}")
@@ -117,27 +110,8 @@ object AvatarManager {
             }
             canvas.drawCircle(x + size / 2, y + size / 2, size / 2, placeholderPaint)
 
-            // Draw online status indicator on placeholder if enabled
-            if (onlineStatus != null && showStatusIndicator) {
-                drawStatusIndicator(canvas, x, y, size, onlineStatus)
-            }
 
             false
         }
-    }
-
-    /**
-     * Draws the status indicator dot on the avatar.
-     *
-     * @param canvas The canvas to draw on
-     * @param avatarX The x-coordinate of the top-left corner of the avatar
-     * @param avatarY The y-coordinate of the top-left corner of the avatar
-     * @param avatarSize The size (width and height) of the avatar
-     * @param status The online status to display
-     */
-    private fun drawStatusIndicator(canvas: Canvas, avatarX: Float, avatarY: Float, avatarSize: Float, status: OnlineStatus) {
-        val indicatorSize = avatarSize * 0.25f // 25% of avatar size
-        val position = StatusIndicator.calculateIndicatorPosition(avatarX, avatarY, avatarSize, indicatorSize)
-        StatusIndicator.drawStatusDot(canvas, position[0], position[1], indicatorSize, status)
     }
 }

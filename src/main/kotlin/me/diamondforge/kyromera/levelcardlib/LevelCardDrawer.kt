@@ -1,5 +1,8 @@
 package me.diamondforge.kyromera.levelcardlib
 
+import org.jetbrains.skia.Canvas
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Surface
 import java.awt.image.BufferedImage
 
 /**
@@ -64,7 +67,7 @@ object LevelCardDrawer {
     }
 
     /**
-     * Draws a level card with the specified parameters and online status.
+     * Draws a level card with the specified parameters.
      *
      * @param avatarBytes Byte array of the avatar image, can be null if avatarUrl is provided
      * @param avatarUrl URL of the avatar image, can be null if avatarBytes is provided
@@ -78,8 +81,6 @@ object LevelCardDrawer {
      * @param accentColor Accent color for the card (ARGB format)
      * @param width Width of the card
      * @param height Height of the card
-     * @param onlineStatus The online status to display
-     * @param showStatusIndicator Whether to show the status indicator
      * @param showGenerationTime Whether to show generation time on the card
      * @return The generated level card as a BufferedImage
      */
@@ -96,8 +97,6 @@ object LevelCardDrawer {
         accentColor: Int,
         width: Int,
         height: Int,
-        onlineStatus: OnlineStatus,
-        showStatusIndicator: Boolean,
         showGenerationTime: Boolean
     ): BufferedImage {
         return builder(username)
@@ -107,8 +106,6 @@ object LevelCardDrawer {
             .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
             .accentColor(accentColor)
             .dimensions(width, height)
-            .onlineStatus(onlineStatus)
-            .showStatusIndicator(showStatusIndicator)
             .showGenerationTime(showGenerationTime)
             .build()
     }
@@ -169,8 +166,6 @@ object LevelCardDrawer {
         private var accentColor: Int = DEFAULT_ACCENT_COLOR
         private var width: Int = DEFAULT_WIDTH
         private var height: Int = DEFAULT_HEIGHT
-        private var onlineStatus: OnlineStatus = OnlineStatus.ONLINE
-        private var showStatusIndicator: Boolean = true
         private var showGenerationTime: Boolean = false
 
         /**
@@ -275,27 +270,6 @@ object LevelCardDrawer {
             return this
         }
 
-        /**
-         * Sets the online status.
-         *
-         * @param onlineStatus The online status to display
-         * @return This builder for chaining
-         */
-        fun onlineStatus(onlineStatus: OnlineStatus): Builder {
-            this.onlineStatus = onlineStatus
-            return this
-        }
-
-        /**
-         * Sets whether to show the status indicator.
-         *
-         * @param showStatusIndicator Whether to show the status indicator
-         * @return This builder for chaining
-         */
-        fun showStatusIndicator(showStatusIndicator: Boolean): Builder {
-            this.showStatusIndicator = showStatusIndicator
-            return this
-        }
 
         /**
          * Sets whether to show generation time on the card.
@@ -317,11 +291,13 @@ object LevelCardDrawer {
         fun build(): BufferedImage {
             // Create UserData object
             val userDataBuilder = UserData.Builder(username)
+                .discriminator("")  // Default empty discriminator
                 .rank(rank)
                 .level(level)
-                .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
-                .onlineStatus(onlineStatus)
-                .showStatusIndicator(showStatusIndicator)
+                .xp(currentXP, maxXpForCurrentLevel)  // Using nextLevelXP instead of min/max
+                .messagesCount(0)   // Default values for new fields
+                .voiceTime("")
+                .streak(0)
 
             // Set avatar source
             val localAvatarUrl = avatarUrl
@@ -332,20 +308,57 @@ object LevelCardDrawer {
             } else if (localAvatarBytes != null) {
                 userDataBuilder.avatarBytes(localAvatarBytes)
             } else {
-                throw IllegalArgumentException("Either avatarBytes must be provided or avatarUrl with downloadFromUrl=true")
+                userDataBuilder.avatarUrl("https://i.pravatar.cc/300") // No avatar source provided
             }
 
             val userData = userDataBuilder.build()
 
-            // Create CardConfiguration object
-            val config = CardConfiguration.Builder()
-                .dimensions(width, height)
-                .accentColor(accentColor)
-                .showGenerationTime(showGenerationTime)
-                .build()
+            // Create ColorConfig object with improved gradients
+            val colorConfig = ColorConfig(
+                primaryColor = accentColor,
+                secondaryColor = adjustColor(accentColor, 1.3f),  // Lighter version of primary color for better gradation
+                backgroundColor = 0xFF0F1729.toInt(),
+                textColor = 0xFFFFFFFF.toInt(),
+                accentColor = adjustColor(accentColor, 0.9f)  // Slightly darker version of primary color for accent
+            )
 
-            // Render the card
-            return CardRenderer.renderCard(userData, config)
+            // Create and render the level card
+            val levelCard = LevelCard(userData, colorConfig)
+
+            // Create a surface to render to
+            val surface = Surface.makeRasterN32Premul(width, height)
+            val canvas = surface.canvas
+
+            // Draw the level card
+            levelCard.draw(canvas, width, height)
+
+            // Convert to BufferedImage
+            val image = surface.makeImageSnapshot()
+            val pngData = image.encodeToData(EncodedImageFormat.PNG)
+                ?: throw RuntimeException("Failed to encode image to PNG")
+
+            try {
+                val inputStream = java.io.ByteArrayInputStream(pngData.bytes)
+                val bufferedImage = javax.imageio.ImageIO.read(inputStream)
+
+                // Clean up
+                surface.close()
+
+                return bufferedImage
+            } catch (e: java.io.IOException) {
+                surface.close()
+                throw RuntimeException("Failed to convert Skia image to BufferedImage", e)
+            }
+        }
+
+        // Helper function to adjust color brightness (copied from LevelCard)
+        private fun adjustColor(color: Int, factor: Float): Int {
+            val a = color and 0xFF000000.toInt()
+            val r = ((color and 0x00FF0000) shr 16) * factor
+            val g = ((color and 0x0000FF00) shr 8) * factor
+            val b = (color and 0x000000FF) * factor
+
+            return a or ((r.toInt() shl 16) and 0x00FF0000) or ((g.toInt() shl 8) and 0x0000FF00) or (b.toInt() and 0x000000FF)
         }
     }
 }

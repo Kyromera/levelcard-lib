@@ -1,7 +1,6 @@
 package me.diamondforge.kyromera.levelcardlib.example
 
 import me.diamondforge.kyromera.levelcardlib.LevelCardDrawer
-import me.diamondforge.kyromera.levelcardlib.OnlineStatus
 
 import javax.imageio.ImageIO
 import javax.swing.*
@@ -32,8 +31,6 @@ class LevelCardApp : JFrame() {
     private val avatarUrlField: JTextField
     private val imagePreviewLabel: JLabel
     private val cardPreviewPanel: JPanel
-    private val onlineStatusComboBox: JComboBox<OnlineStatus>
-    private val showStatusIndicatorCheckBox: JCheckBox
     private val showGenerationTimeCheckBox: JCheckBox
 
     private var avatarBytes: ByteArray? = null
@@ -191,34 +188,13 @@ class LevelCardApp : JFrame() {
         imagePreviewLabel.border = BorderFactory.createLineBorder(Color.GRAY)
         formPanel.add(imagePreviewLabel, gbc)
 
-        // Online Status
-        gbc.gridx = 0
-        gbc.gridy = 12
-        formPanel.add(JLabel("Online Status:"), gbc)
-
-        gbc.gridx = 1
-        gbc.gridy = 12
-        onlineStatusComboBox = JComboBox(OnlineStatus.values())
-        formPanel.add(onlineStatusComboBox, gbc)
-
-        // Show Status Indicator
-        gbc.gridx = 0
-        gbc.gridy = 13
-        formPanel.add(JLabel("Show Status Indicator:"), gbc)
-
-        gbc.gridx = 1
-        gbc.gridy = 13
-        showStatusIndicatorCheckBox = JCheckBox()
-        showStatusIndicatorCheckBox.isSelected = true
-        formPanel.add(showStatusIndicatorCheckBox, gbc)
-
         // Show Generation Time
         gbc.gridx = 0
-        gbc.gridy = 14
+        gbc.gridy = 12
         formPanel.add(JLabel("Show Generation Time:"), gbc)
 
         gbc.gridx = 1
-        gbc.gridy = 14
+        gbc.gridy = 12
         showGenerationTimeCheckBox = JCheckBox()
         showGenerationTimeCheckBox.isSelected = false
         formPanel.add(showGenerationTimeCheckBox, gbc)
@@ -315,9 +291,7 @@ class LevelCardApp : JFrame() {
             val avatarUrl = avatarUrlField.text.trim()
             val useUrl = avatarUrl.isNotEmpty()
 
-            // Get online status settings
-            val onlineStatus = onlineStatusComboBox.selectedItem as OnlineStatus
-            val showStatusIndicator = showStatusIndicatorCheckBox.isSelected
+            // Get generation time setting
             val showGenerationTime = showGenerationTimeCheckBox.isSelected
 
             // Generate the level card with new features using the Builder pattern
@@ -332,8 +306,6 @@ class LevelCardApp : JFrame() {
                 .xp(minXP, maxXP, currentXP)
                 .accentColor(accentColor)
                 .dimensions(width, height)
-                .onlineStatus(onlineStatus)
-                .showStatusIndicator(showStatusIndicator)
                 .showGenerationTime(showGenerationTime)
                 .build()
 

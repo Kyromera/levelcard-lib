@@ -74,7 +74,7 @@ fun BufferedImage.sendToChannel(
  * @param rank User's rank
  * @param level User's level
  * @param currentXP User's current XP
- * @param maxXpForCurrentLevel Maximum XP for the current level
+ * @param nextLevelXP XP required for the next level
  * @param fileName The name of the file (default: "level-card.png")
  * @param content Optional message content to send with the image
  * @return The sent message
@@ -84,14 +84,14 @@ fun User.sendLevelCard(
     rank: Int,
     level: Int,
     currentXP: Int,
-    maxXpForCurrentLevel: Int,
+    nextLevelXP: Int,
     fileName: String = "level-card.png",
     content: String? = null
 ): Message {
     val levelCard = this.createLevelCard()
         .rank(rank)
         .level(level)
-        .xp(0, maxXpForCurrentLevel, currentXP)
+        .xp(currentXP, nextLevelXP)
         .build()
 
     return levelCard.sendToChannel(channel, fileName, content)
@@ -105,7 +105,7 @@ fun User.sendLevelCard(
  * @param rank User's rank
  * @param level User's level
  * @param currentXP User's current XP
- * @param maxXpForCurrentLevel Maximum XP for the current level
+ * @param nextLevelXP XP required for the next level
  * @param fileName The name of the file (default: "level-card.png")
  * @param content Optional message content to send with the image
  * @return The sent message
@@ -115,14 +115,14 @@ fun Member.sendLevelCard(
     rank: Int,
     level: Int,
     currentXP: Int,
-    maxXpForCurrentLevel: Int,
+    nextLevelXP: Int,
     fileName: String = "level-card.png",
     content: String? = null
 ): Message {
     val levelCard = this.createLevelCard()
         .rank(rank)
         .level(level)
-        .xp(0, maxXpForCurrentLevel, currentXP)
+        .xp(currentXP, nextLevelXP)
         .build()
 
     return levelCard.sendToChannel(channel, fileName, content)

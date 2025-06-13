@@ -67,8 +67,6 @@ class LevelCardDrawerTest {
             accentColor = 0xFFFF0000.toInt(),
             width = 800,
             height = 250,
-            onlineStatus = OnlineStatus.IDLE,
-            showStatusIndicator = true,
             showGenerationTime = true
         )
 
