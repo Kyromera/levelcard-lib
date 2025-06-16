@@ -243,7 +243,7 @@ object JDALevelCard {
             val onlineStatus = determineOnlineStatus()
 
             // Get the effective avatar URL (with size parameter for better quality)
-            val avatarUrl = user.effectiveAvatarUrl + "?size=256"
+            val avatarUrl = user.effectiveAvatarUrl + "?size=512"
 
             // Create or use the card configuration
             val config = if (customConfig != null) {
