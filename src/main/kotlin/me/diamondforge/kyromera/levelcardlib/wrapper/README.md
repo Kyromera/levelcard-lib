@@ -139,7 +139,39 @@ JDALevelCard.builder(user)
     .build()
 ```
 
-Note: When using a custom configuration, any explicitly set values from the builder (dimensions, accent color, showGenerationTime) will override the corresponding values in the custom configuration.
+### Precise Element Positioning
+
+For even more control over the layout, you can use the LayoutConfig to precisely position each element on the card:
+
+```kotlin
+// Create a layout configuration
+val layout = LayoutConfig.Builder()
+    .avatarPosition(50, 50)
+    .usernamePosition(270, 85)
+    .rankLevelPosition(270, 135)
+    .xpTextPosition(270, 205)
+    .progressBarPosition(270, 220, 50)
+    .build()
+
+// Apply the layout configuration
+JDALevelCard.builder(user)
+    .rank(5)
+    .level(10)
+    .xp(100, 500, 250)
+    .layoutConfig(layout)
+    .build()
+```
+
+You can also use relative offsets from default positions:
+
+```kotlin
+val layout = LayoutConfig.Builder()
+    .usernameOffset(xOffset = 10, yOffset = -5)
+    .progressBarOffset(yOffset = 10)
+    .build()
+```
+
+Note: When using a custom configuration, any explicitly set values from the builder (dimensions, accent color, showGenerationTime) will override the corresponding values in the custom configuration. The layoutConfig can be used with or without a custom CardConfiguration.
 
 ## Integration with Bot Commands
 

@@ -1,6 +1,7 @@
 package me.diamondforge.kyromera.levelcardlib.wrapper
 
 import me.diamondforge.kyromera.levelcardlib.CardConfiguration
+import me.diamondforge.kyromera.levelcardlib.LayoutConfig
 import me.diamondforge.kyromera.levelcardlib.LevelCardDrawer
 import me.diamondforge.kyromera.levelcardlib.OnlineStatus
 import me.diamondforge.kyromera.levelcardlib.UserData
@@ -59,6 +60,7 @@ object JDALevelCard {
         private var downloadAvatar: Boolean = true
         private var customOnlineStatus: OnlineStatus? = null
         private var customConfig: CardConfiguration? = null
+        private var layoutConfig: LayoutConfig? = null
 
         /**
          * Creates a builder for a JDA User.
@@ -192,6 +194,20 @@ object JDALevelCard {
         }
 
         /**
+         * Sets a detailed layout configuration for the card.
+         * This allows for independent positioning of all elements on the card.
+         * If a custom configuration is also provided via customConfig(), this layout
+         * will be applied to that configuration.
+         *
+         * @param layoutConfig The layout configuration
+         * @return This builder for chaining
+         */
+        fun layoutConfig(layoutConfig: LayoutConfig): Builder {
+            this.layoutConfig = layoutConfig
+            return this
+        }
+
+        /**
          * Sets whether to download the avatar from Discord.
          * If set to false, the avatar URL will be used directly.
          *
@@ -274,14 +290,25 @@ object JDALevelCard {
                         tempConfig.timeFontSize
                     )
                     .backgroundConfig(tempConfig.shadowBlur, tempConfig.cornerRadius)
-                    .build()
+
+                if (layoutConfig != null) {
+                    configBuilder.layoutConfig(layoutConfig!!)
+                } else if (tempConfig.layoutConfig != null) {
+                    configBuilder.layoutConfig(tempConfig.layoutConfig)
+                }
+
+                configBuilder.build()
             } else {
-                // Create a default configuration
-                CardConfiguration.Builder()
+                val configBuilder = CardConfiguration.Builder()
                     .dimensions(width, height)
                     .accentColor(accentColor ?: 0xFF2CBCC9.toInt()) // Use provided color or default
                     .showGenerationTime(showGenerationTime)
-                    .build()
+
+                if (layoutConfig != null) {
+                    configBuilder.layoutConfig(layoutConfig!!)
+                }
+
+                configBuilder.build()
             }
 
             // Create the user data
