@@ -141,38 +141,25 @@ object CardRenderer {
     private fun loadFonts(): Pair<Typeface, Typeface> {
         val fontManager = FontMgr.default
 
-        // Try to get Arial Bold, then Sans-Serif Bold, then default to a character-based match
-        var boldTypeface = fontManager.matchFamilyStyle("Arial", FontStyle.BOLD)
-        if (boldTypeface == null) {
-            boldTypeface = fontManager.matchFamilyStyle("Sans-Serif", FontStyle.BOLD)
-        }
-        if (boldTypeface == null && fontManager.familiesCount > 0) {
-            boldTypeface = fontManager.matchFamilyStyleCharacter(
-                null, FontStyle.BOLD, null, 'A'.code
-            )
-        }
-        // If still null, throw an exception as we need a font to render text
-        if (boldTypeface == null) {
-            throw RuntimeException("Failed to load any usable bold font")
-        }
+        val boldTypeface = listOf("Montserrat", "Arial", "Sans-Serif", null).firstNotNullOfOrNull { family ->
+            if (family != null) {
+                fontManager.matchFamilyStyle(family, FontStyle.BOLD)
+            } else {
+                fontManager.matchFamilyStyleCharacter(null, FontStyle.BOLD, null, 'A'.code)
+            }
+        } ?: throw RuntimeException("Failed to load any usable bold font")
 
-        // Try to get Arial Regular, then Sans-Serif Regular, then default to a character-based match
-        var regularTypeface = fontManager.matchFamilyStyle("Arial", FontStyle.NORMAL)
-        if (regularTypeface == null) {
-            regularTypeface = fontManager.matchFamilyStyle("Sans-Serif", FontStyle.NORMAL)
-        }
-        if (regularTypeface == null && fontManager.familiesCount > 0) {
-            regularTypeface = fontManager.matchFamilyStyleCharacter(
-                null, FontStyle.NORMAL, null, 'A'.code
-            )
-        }
-        // If still null, throw an exception as we need a font to render text
-        if (regularTypeface == null) {
-            throw RuntimeException("Failed to load any usable regular font")
-        }
+        val regularTypeface = listOf("Montserrat", "Arial", "Sans-Serif", null).firstNotNullOfOrNull { family ->
+            if (family != null) {
+                fontManager.matchFamilyStyle(family, FontStyle.NORMAL)
+            } else {
+                fontManager.matchFamilyStyleCharacter(null, FontStyle.NORMAL, null, 'A'.code)
+            }
+        } ?: throw RuntimeException("Failed to load any usable regular font")
 
         return Pair(boldTypeface, regularTypeface)
     }
+
 
     /**
      * Draws all text elements on the card.
