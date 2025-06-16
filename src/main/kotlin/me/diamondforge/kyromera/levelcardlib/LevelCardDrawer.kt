@@ -19,6 +19,7 @@ object LevelCardDrawer {
      * @return A new Builder instance
      */
     fun builder(username: String): Builder {
+        require(username.isNotBlank()) { "Username cannot be blank" }
         return Builder(username)
     }
 

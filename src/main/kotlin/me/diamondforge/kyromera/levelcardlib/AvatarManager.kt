@@ -23,21 +23,55 @@ object AvatarManager {
      */
     @Throws(IOException::class)
     fun downloadImage(url: String): ByteArray {
-        val request = Request.Builder().url(url).build()
-        HTTP_CLIENT.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("Failed to download image: $response")
-            }
+        try {
+            // Create a client with timeouts
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
 
-            response.body?.byteStream()?.use { inputStream ->
-                val outputStream = ByteArrayOutputStream()
-                val buffer = ByteArray(4096)
-                var bytesRead: Int
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "LevelCardLib/1.0")
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    throw IOException("Failed to download image: ${response.code} ${response.message}")
                 }
-                return outputStream.toByteArray()
-            } ?: throw IOException("Response body is null")
+
+                response.body?.byteStream()?.use { inputStream ->
+                    val outputStream = ByteArrayOutputStream()
+                    val buffer = ByteArray(4096)
+                    var bytesRead: Int
+                    var totalBytesRead = 0
+                    val maxBytes = 10 * 1024 * 1024 // 10MB max
+
+                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                        outputStream.write(buffer, 0, bytesRead)
+                        totalBytesRead += bytesRead
+
+                        // Check if we've exceeded the maximum size
+                        if (totalBytesRead > maxBytes) {
+                            throw IOException("Image too large (exceeds 10MB)")
+                        }
+                    }
+
+                    val bytes = outputStream.toByteArray()
+                    if (bytes.isEmpty()) {
+                        throw IOException("Downloaded image is empty")
+                    }
+
+                    return bytes
+                } ?: throw IOException("Response body is null")
+            }
+        } catch (e: Exception) {
+            // Convert any exception to IOException with a descriptive message
+            when (e) {
+                is IOException -> throw e
+                is IllegalArgumentException -> throw IOException("Invalid URL: $url", e)
+                else -> throw IOException("Failed to download image: ${e.message}", e)
+            }
         }
     }
 
@@ -64,56 +98,99 @@ object AvatarManager {
         onlineStatus: OnlineStatus?,
         showStatusIndicator: Boolean
     ): Boolean {
-        if (avatarBytes == null) {
+        if (avatarBytes == null || avatarBytes.isEmpty()) {
+            drawPlaceholderAvatar(canvas, x, y, size, borderColor, onlineStatus, showStatusIndicator)
             return false
         }
 
+        // Ensure size is positive
+        val safeSize = size.coerceAtLeast(1f)
+
         return try {
             val avatarImage = Image.makeFromEncoded(avatarBytes)
+
+            // Check if image was loaded successfully
+            if (avatarImage == null || avatarImage.width <= 0 || avatarImage.height <= 0) {
+                drawPlaceholderAvatar(canvas, x, y, safeSize, borderColor, onlineStatus, showStatusIndicator)
+                return false
+            }
 
             // Create circular mask for avatar with anti-aliasing
             val avatarPaint = Paint().apply {
                 isAntiAlias = true
             }
 
-            // Draw avatar circle border with accent color
+            try {
+                // Draw avatar circle border with accent color
+                val borderPaint = Paint().apply {
+                    color = borderColor
+                    strokeWidth = 7f // Scaled from 4f (1.667x)
+                    mode = PaintMode.STROKE
+                    isAntiAlias = true
+                }
+                canvas.drawCircle(x + safeSize / 2, y + safeSize / 2, safeSize / 2 + 2, borderPaint)
+
+                // Draw avatar in circular shape
+                canvas.save()
+                canvas.clipRRect(RRect.makeXYWH(x, y, safeSize, safeSize, safeSize / 2))
+
+                // Ensure anti-aliasing is enabled
+                avatarPaint.apply {
+                    isAntiAlias = true
+                }
+
+                canvas.drawImageRect(
+                    avatarImage,
+                    Rect.makeXYWH(0f, 0f, avatarImage.width.toFloat(), avatarImage.height.toFloat()),
+                    Rect.makeXYWH(x, y, safeSize, safeSize),
+                    avatarPaint
+                )
+                canvas.restore()
+
+                // Draw online status indicator if enabled
+                if (onlineStatus != null && showStatusIndicator) {
+                    drawStatusIndicator(canvas, x, y, safeSize, onlineStatus)
+                }
+
+                true
+            } catch (e: Exception) {
+                // If any drawing operation fails, try to recover by drawing a placeholder
+                drawPlaceholderAvatar(canvas, x, y, safeSize, borderColor, onlineStatus, showStatusIndicator)
+                false
+            }
+        } catch (e: Exception) {
+            // If image loading fails, draw a placeholder
+            drawPlaceholderAvatar(canvas, x, y, safeSize, borderColor, onlineStatus, showStatusIndicator)
+            false
+        }
+    }
+
+    /**
+     * Draws a placeholder avatar when the actual avatar cannot be loaded.
+     */
+    private fun drawPlaceholderAvatar(
+        canvas: Canvas,
+        x: Float,
+        y: Float,
+        size: Float,
+        borderColor: Int,
+        onlineStatus: OnlineStatus?,
+        showStatusIndicator: Boolean
+    ) {
+        try {
+            // Draw placeholder circle with border
             val borderPaint = Paint().apply {
                 color = borderColor
-                strokeWidth = 7f // Scaled from 4f (1.667x)
+                strokeWidth = 7f
                 mode = PaintMode.STROKE
                 isAntiAlias = true
             }
             canvas.drawCircle(x + size / 2, y + size / 2, size / 2 + 2, borderPaint)
 
-            // Draw avatar in circular shape
-            canvas.save()
-            canvas.clipRRect(RRect.makeXYWH(x, y, size, size, size / 2))
-
-            // Ensure anti-aliasing is enabled
-            avatarPaint.apply {
-                isAntiAlias = true
-            }
-
-            canvas.drawImageRect(
-                avatarImage,
-                Rect.makeXYWH(0f, 0f, avatarImage.width.toFloat(), avatarImage.height.toFloat()),
-                Rect.makeXYWH(x, y, size, size),
-                avatarPaint
-            )
-            canvas.restore()
-
-            // Draw online status indicator if enabled
-            if (onlineStatus != null && showStatusIndicator) {
-                drawStatusIndicator(canvas, x, y, size, onlineStatus)
-            }
-
-            true
-        } catch (e: Exception) {
-            System.err.println("Failed to load avatar image: ${e.message}")
-
             // Draw placeholder avatar
             val placeholderPaint = Paint().apply {
                 color = 0xFF555555.toInt()
+                isAntiAlias = true
             }
             canvas.drawCircle(x + size / 2, y + size / 2, size / 2, placeholderPaint)
 
@@ -121,8 +198,8 @@ object AvatarManager {
             if (onlineStatus != null && showStatusIndicator) {
                 drawStatusIndicator(canvas, x, y, size, onlineStatus)
             }
-
-            false
+        } catch (e: Exception) {
+            // Silently ignore any errors in the placeholder drawing to prevent cascading failures
         }
     }
 

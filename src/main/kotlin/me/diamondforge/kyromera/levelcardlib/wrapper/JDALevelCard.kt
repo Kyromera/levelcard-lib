@@ -372,15 +372,41 @@ object JDALevelCard {
          * @throws IOException If the download fails
          */
         private fun downloadAvatarBytes(url: String): ByteArray {
-            val connection = URL(url).openConnection()
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
-            connection.setRequestProperty("User-Agent", "JDALevelCard/1.0")
+            if (url.isBlank()) {
+                throw IOException("Avatar URL cannot be blank")
+            }
 
-            val image = ImageIO.read(connection.getInputStream())
-            val outputStream = ByteArrayOutputStream()
-            ImageIO.write(image, "png", outputStream)
-            return outputStream.toByteArray()
+            try {
+                val connection = URL(url).openConnection()
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.setRequestProperty("User-Agent", "JDALevelCard/1.0")
+
+                val image = ImageIO.read(connection.getInputStream())
+                if (image == null) {
+                    throw IOException("Failed to read image from URL: $url")
+                }
+
+                if (image.width <= 0 || image.height <= 0) {
+                    throw IOException("Invalid image dimensions: ${image.width}x${image.height}")
+                }
+
+                val outputStream = ByteArrayOutputStream()
+                if (!ImageIO.write(image, "png", outputStream)) {
+                    throw IOException("Failed to encode image as PNG")
+                }
+
+                val bytes = outputStream.toByteArray()
+                if (bytes.isEmpty()) {
+                    throw IOException("Generated image is empty")
+                }
+
+                return bytes
+            } catch (e: IOException) {
+                throw e
+            } catch (e: Exception) {
+                throw IOException("Failed to download avatar: ${e.message}", e)
+            }
         }
     }
 }

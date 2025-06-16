@@ -287,23 +287,49 @@ object CardRenderer {
         val yOffset = config.layoutConfig?.progressBarYOffset ?: config.progressBarYOffset
         val rightMargin = config.layoutConfig?.progressBarRightMargin ?: config.progressBarMargin
 
-        val progressWidth = (userData.currentXP - userData.minXpForCurrentLevel).toFloat() /
-                (userData.maxXpForCurrentLevel - userData.minXpForCurrentLevel).toFloat() *
-                (cardWidth - xOffset - rightMargin).toFloat()
+        // Calculate progress width, handling potential division by zero
+        val progressWidth = if (userData.maxXpForCurrentLevel > userData.minXpForCurrentLevel) {
+            (userData.currentXP - userData.minXpForCurrentLevel).toFloat() /
+                    (userData.maxXpForCurrentLevel - userData.minXpForCurrentLevel).toFloat() *
+                    (cardWidth - xOffset - rightMargin).toFloat()
+        } else {
+            // If min and max XP are the same, show full progress bar
+            (cardWidth - xOffset - rightMargin).toFloat()
+        }
+
         val progressPaint = Paint().apply {
             color = accentColor
             isAntiAlias = true
         }
-        canvas.drawRRect(
-            RRect.makeXYWH(
-                xOffset.toFloat(),
-                yOffset.toFloat(),
-                progressWidth,
-                config.progressBarHeight.toFloat(),
-                (config.progressBarHeight / 2).toFloat()
-            ),
-            progressPaint
-        )
+
+        try {
+            canvas.drawRRect(
+                RRect.makeXYWH(
+                    xOffset.toFloat(),
+                    yOffset.toFloat(),
+                    progressWidth.coerceAtLeast(0f), // Ensure width is not negative
+                    config.progressBarHeight.toFloat(),
+                    (config.progressBarHeight / 2).toFloat()
+                ),
+                progressPaint
+            )
+        } catch (e: Exception) {
+            // If drawing fails, try with minimal values that should work
+            try {
+                canvas.drawRRect(
+                    RRect.makeXYWH(
+                        xOffset.toFloat(),
+                        yOffset.toFloat(),
+                        1f, // Minimal width
+                        config.progressBarHeight.toFloat(),
+                        (config.progressBarHeight / 2).toFloat()
+                    ),
+                    progressPaint
+                )
+            } catch (e: Exception) {
+                // If even minimal drawing fails, silently ignore to prevent card generation failure
+            }
+        }
     }
 
     /**

@@ -19,21 +19,33 @@ object StatusIndicator {
      * @param status The online status to display
      */
     fun drawStatusDot(canvas: Canvas, x: Float, y: Float, size: Float, status: OnlineStatus) {
-        // Draw white border around the status indicator
-        val borderPaint = Paint().apply {
-            color = 0xFFFFFFFF.toInt()
-            mode = PaintMode.FILL
-            isAntiAlias = true
+        // Validate parameters
+        if (canvas == null || size <= 0) {
+            return
         }
-        canvas.drawCircle(x, y, size / 2 + 2, borderPaint)
 
-        // Draw the status indicator with the appropriate color
-        val statusPaint = Paint().apply {
-            color = status.color
-            mode = PaintMode.FILL
-            isAntiAlias = true
+        try {
+            // Ensure size is positive and reasonable
+            val safeSize = size.coerceIn(1f, 100f)
+
+            // Draw white border around the status indicator
+            val borderPaint = Paint().apply {
+                color = 0xFFFFFFFF.toInt()
+                mode = PaintMode.FILL
+                isAntiAlias = true
+            }
+            canvas.drawCircle(x, y, safeSize / 2 + 2, borderPaint)
+
+            // Draw the status indicator with the appropriate color
+            val statusPaint = Paint().apply {
+                color = status.color
+                mode = PaintMode.FILL
+                isAntiAlias = true
+            }
+            canvas.drawCircle(x, y, safeSize / 2, statusPaint)
+        } catch (e: Exception) {
+            // Silently ignore any drawing errors to prevent card generation failure
         }
-        canvas.drawCircle(x, y, size / 2, statusPaint)
     }
 
     /**
@@ -47,8 +59,14 @@ object StatusIndicator {
      * @return An array containing the x and y coordinates of the indicator center
      */
     fun calculateIndicatorPosition(avatarX: Float, avatarY: Float, avatarSize: Float, indicatorSize: Float): FloatArray {
-        val indicatorX = avatarX + avatarSize - indicatorSize / 2
-        val indicatorY = avatarY + avatarSize - indicatorSize / 2
+        // Validate parameters and ensure they're reasonable
+        val safeAvatarSize = avatarSize.coerceAtLeast(1f)
+        val safeIndicatorSize = indicatorSize.coerceIn(1f, safeAvatarSize / 2)
+
+        // Calculate position, ensuring the indicator stays within the avatar bounds
+        val indicatorX = (avatarX + safeAvatarSize - safeIndicatorSize / 2).coerceAtLeast(avatarX)
+        val indicatorY = (avatarY + safeAvatarSize - safeIndicatorSize / 2).coerceAtLeast(avatarY)
+
         return floatArrayOf(indicatorX, indicatorY)
     }
 }
