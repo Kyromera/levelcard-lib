@@ -172,6 +172,7 @@ object LevelCardDrawer {
         private var onlineStatus: OnlineStatus = OnlineStatus.ONLINE
         private var showStatusIndicator: Boolean = true
         private var showGenerationTime: Boolean = false
+        private var layoutConfig: LayoutConfig? = null
 
         /**
          * Sets the avatar source.
@@ -309,6 +310,18 @@ object LevelCardDrawer {
         }
 
         /**
+         * Sets the detailed layout configuration for the card.
+         * This allows for independent positioning of all elements on the card.
+         *
+         * @param layoutConfig The layout configuration
+         * @return This builder for chaining
+         */
+        fun layoutConfig(layoutConfig: LayoutConfig): Builder {
+            this.layoutConfig = layoutConfig
+            return this
+        }
+
+        /**
          * Builds and returns the level card.
          *
          * @return The generated level card as a BufferedImage
@@ -338,11 +351,18 @@ object LevelCardDrawer {
             val userData = userDataBuilder.build()
 
             // Create CardConfiguration object
-            val config = CardConfiguration.Builder()
+            val configBuilder = CardConfiguration.Builder()
                 .dimensions(width, height)
                 .accentColor(accentColor)
                 .showGenerationTime(showGenerationTime)
-                .build()
+
+            // Add layout configuration if provided
+            val localLayoutConfig = layoutConfig
+            if (localLayoutConfig != null) {
+                configBuilder.layoutConfig(localLayoutConfig)
+            }
+
+            val config = configBuilder.build()
 
             // Render the card
             return CardRenderer.renderCard(userData, config)

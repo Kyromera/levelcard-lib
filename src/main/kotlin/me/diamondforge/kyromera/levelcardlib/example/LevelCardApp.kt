@@ -1,6 +1,7 @@
 package me.diamondforge.kyromera.levelcardlib.example
 
 import me.diamondforge.kyromera.levelcardlib.LevelCardDrawer
+import me.diamondforge.kyromera.levelcardlib.LayoutConfig
 import me.diamondforge.kyromera.levelcardlib.OnlineStatus
 
 import javax.imageio.ImageIO
@@ -35,6 +36,23 @@ class LevelCardApp : JFrame() {
     private val onlineStatusComboBox: JComboBox<OnlineStatus>
     private val showStatusIndicatorCheckBox: JCheckBox
     private val showGenerationTimeCheckBox: JCheckBox
+    private val useCustomLayoutCheckBox: JCheckBox = JCheckBox()
+    private val useOffsetsCheckBox: JCheckBox = JCheckBox()
+
+    // Layout configuration fields
+    private val avatarXField: JTextField = JTextField("50", 5)
+    private val avatarYField: JTextField = JTextField("0", 5)
+    private val usernameXField: JTextField = JTextField("270", 5)
+    private val usernameYField: JTextField = JTextField("83", 5)
+    private val rankLevelXField: JTextField = JTextField("270", 5)
+    private val rankLevelYField: JTextField = JTextField("133", 5)
+    private val xpTextXField: JTextField = JTextField("270", 5)
+    private val xpTextYField: JTextField = JTextField("200", 5)
+    private val timeTextXField: JTextField = JTextField("270", 5)
+    private val timeTextYField: JTextField = JTextField("267", 5)
+    private val progressBarXField: JTextField = JTextField("270", 5)
+    private val progressBarYField: JTextField = JTextField("217", 5)
+    private val progressBarRightMarginField: JTextField = JTextField("50", 5)
 
     private var avatarBytes: ByteArray? = null
     private var cardImage: BufferedImage? = null
@@ -223,9 +241,186 @@ class LevelCardApp : JFrame() {
         showGenerationTimeCheckBox.isSelected = false
         formPanel.add(showGenerationTimeCheckBox, gbc)
 
-        // Generate button
+        // Custom Layout
         gbc.gridx = 0
         gbc.gridy = 15
+        formPanel.add(JLabel("Use Custom Layout:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 15
+        useCustomLayoutCheckBox.isSelected = false
+        formPanel.add(useCustomLayoutCheckBox, gbc)
+
+        // Use Offsets
+        gbc.gridx = 0
+        gbc.gridy = 16
+        formPanel.add(JLabel("Use Offsets:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 16
+        useOffsetsCheckBox.isSelected = false
+        useOffsetsCheckBox.addActionListener { e ->
+            val useOffsets = useOffsetsCheckBox.isSelected
+            // Update field labels to indicate whether values are offsets or absolute positions
+            val labelSuffix = if (useOffsets) " Offset:" else ":"
+
+            // Update all field labels
+            updateFieldLabels(formPanel, labelSuffix)
+
+            // Set default values for offset mode
+            if (useOffsets) {
+                if (avatarXField.text == "50") avatarXField.text = "0"
+                if (avatarYField.text == "0") avatarYField.text = "0"
+                if (usernameXField.text == "270") usernameXField.text = "0"
+                if (usernameYField.text == "83") usernameYField.text = "0"
+                if (rankLevelXField.text == "270") rankLevelXField.text = "0"
+                if (rankLevelYField.text == "133") rankLevelYField.text = "0"
+                if (xpTextXField.text == "270") xpTextXField.text = "0"
+                if (xpTextYField.text == "200") xpTextYField.text = "0"
+                if (timeTextXField.text == "270") timeTextXField.text = "0"
+                if (timeTextYField.text == "267") timeTextYField.text = "0"
+                if (progressBarXField.text == "270") progressBarXField.text = "0"
+                if (progressBarYField.text == "217") progressBarYField.text = "0"
+                if (progressBarRightMarginField.text == "50") progressBarRightMarginField.text = "0"
+            } else {
+                // Revert to default absolute positions when offset mode is disabled
+                if (avatarXField.text == "0") avatarXField.text = "50"
+                if (avatarYField.text == "0") avatarYField.text = "0"
+                if (usernameXField.text == "0") usernameXField.text = "270"
+                if (usernameYField.text == "0") usernameYField.text = "83"
+                if (rankLevelXField.text == "0") rankLevelXField.text = "270"
+                if (rankLevelYField.text == "0") rankLevelYField.text = "133"
+                if (xpTextXField.text == "0") xpTextXField.text = "270"
+                if (xpTextYField.text == "0") xpTextYField.text = "200"
+                if (timeTextXField.text == "0") timeTextXField.text = "270"
+                if (timeTextYField.text == "0") timeTextYField.text = "267"
+                if (progressBarXField.text == "0") progressBarXField.text = "270"
+                if (progressBarYField.text == "0") progressBarYField.text = "217"
+                if (progressBarRightMarginField.text == "0") progressBarRightMarginField.text = "50"
+            }
+        }
+        formPanel.add(useOffsetsCheckBox, gbc)
+
+        // Layout Configuration Section
+        gbc.gridx = 0
+        gbc.gridy = 17
+        gbc.gridwidth = 2
+        formPanel.add(JLabel("--- Layout Configuration ---"), gbc)
+        gbc.gridwidth = 1
+
+        // Avatar Position
+        gbc.gridx = 0
+        gbc.gridy = 18
+        formPanel.add(JLabel("Avatar X:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 18
+        formPanel.add(avatarXField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 19
+        formPanel.add(JLabel("Avatar Y:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 19
+        formPanel.add(avatarYField, gbc)
+
+        // Username Position
+        gbc.gridx = 0
+        gbc.gridy = 20
+        formPanel.add(JLabel("Username X:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 20
+        formPanel.add(usernameXField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 21
+        formPanel.add(JLabel("Username Y:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 21
+        formPanel.add(usernameYField, gbc)
+
+        // Rank/Level Position
+        gbc.gridx = 0
+        gbc.gridy = 22
+        formPanel.add(JLabel("Rank/Level X:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 22
+        formPanel.add(rankLevelXField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 23
+        formPanel.add(JLabel("Rank/Level Y:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 23
+        formPanel.add(rankLevelYField, gbc)
+
+        // XP Text Position
+        gbc.gridx = 0
+        gbc.gridy = 24
+        formPanel.add(JLabel("XP Text X:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 24
+        formPanel.add(xpTextXField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 25
+        formPanel.add(JLabel("XP Text Y:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 25
+        formPanel.add(xpTextYField, gbc)
+
+        // Time Text Position
+        gbc.gridx = 0
+        gbc.gridy = 26
+        formPanel.add(JLabel("Time Text X:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 26
+        formPanel.add(timeTextXField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 27
+        formPanel.add(JLabel("Time Text Y:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 27
+        formPanel.add(timeTextYField, gbc)
+
+        // Progress Bar Position
+        gbc.gridx = 0
+        gbc.gridy = 28
+        formPanel.add(JLabel("Progress Bar X:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 28
+        formPanel.add(progressBarXField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 29
+        formPanel.add(JLabel("Progress Bar Y:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 29
+        formPanel.add(progressBarYField, gbc)
+
+        gbc.gridx = 0
+        gbc.gridy = 30
+        formPanel.add(JLabel("Progress Bar Right Margin:"), gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 30
+        formPanel.add(progressBarRightMarginField, gbc)
+
+        // Generate button
+        gbc.gridx = 0
+        gbc.gridy = 31
         gbc.gridwidth = 2
         val generateButton = JButton("Generate Level Card")
         generateButton.addActionListener(::generateLevelCard)
@@ -233,13 +428,18 @@ class LevelCardApp : JFrame() {
 
         // Save button
         gbc.gridx = 0
-        gbc.gridy = 16
+        gbc.gridy = 32
         val saveButton = JButton("Save Level Card")
         saveButton.addActionListener(::saveLevelCard)
         formPanel.add(saveButton, gbc)
 
-        // Add form panel to the left side
-        mainPanel.add(formPanel, BorderLayout.WEST)
+        val scrollPane = JScrollPane(formPanel)
+        scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        scrollPane.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        scrollPane.border = null  
+
+        scrollPane.preferredSize = Dimension(400, 500)
+        mainPanel.add(scrollPane, BorderLayout.WEST)
 
         // Card preview panel
         cardPreviewPanel = JPanel(BorderLayout())
@@ -320,8 +520,8 @@ class LevelCardApp : JFrame() {
             val showStatusIndicator = showStatusIndicatorCheckBox.isSelected
             val showGenerationTime = showGenerationTimeCheckBox.isSelected
 
-            // Generate the level card with new features using the Builder pattern
-            cardImage = LevelCardDrawer.builder(username)
+            // Create the level card builder
+            val cardBuilder = LevelCardDrawer.builder(username)
                 .avatarSource(
                     if (useUrl) null else avatarBytes,
                     if (useUrl) avatarUrl else null,
@@ -335,7 +535,64 @@ class LevelCardApp : JFrame() {
                 .onlineStatus(onlineStatus)
                 .showStatusIndicator(showStatusIndicator)
                 .showGenerationTime(showGenerationTime)
-                .build()
+
+            // Add custom layout configuration if enabled
+            if (useCustomLayoutCheckBox.isSelected) {
+                try {
+                    // Parse layout configuration values
+                    val avatarX = avatarXField.text.toInt()
+                    val avatarY = avatarYField.text.toInt()
+                    val usernameX = usernameXField.text.toInt()
+                    val usernameY = usernameYField.text.toInt()
+                    val rankLevelX = rankLevelXField.text.toInt()
+                    val rankLevelY = rankLevelYField.text.toInt()
+                    val xpTextX = xpTextXField.text.toInt()
+                    val xpTextY = xpTextYField.text.toInt()
+                    val timeTextX = timeTextXField.text.toInt()
+                    val timeTextY = timeTextYField.text.toInt()
+                    val progressBarX = progressBarXField.text.toInt()
+                    val progressBarY = progressBarYField.text.toInt()
+                    val progressBarRightMargin = progressBarRightMarginField.text.toInt()
+
+                    // Create layout configuration
+                    val layoutConfigBuilder = LayoutConfig.Builder()
+
+                    // Use offset methods if "Use Offsets" is checked, otherwise use absolute position methods
+                    if (useOffsetsCheckBox.isSelected) {
+                        layoutConfigBuilder
+                            .avatarOffset(avatarX, avatarY)
+                            .usernameOffset(usernameX, usernameY)
+                            .rankLevelOffset(rankLevelX, rankLevelY)
+                            .xpTextOffset(xpTextX, xpTextY)
+                            .timeTextOffset(timeTextX, timeTextY)
+                            .progressBarOffset(progressBarX, progressBarY, progressBarRightMargin)
+                    } else {
+                        layoutConfigBuilder
+                            .avatarPosition(avatarX, avatarY)
+                            .usernamePosition(usernameX, usernameY)
+                            .rankLevelPosition(rankLevelX, rankLevelY)
+                            .xpTextPosition(xpTextX, xpTextY)
+                            .timeTextPosition(timeTextX, timeTextY)
+                            .progressBarPosition(progressBarX, progressBarY, progressBarRightMargin)
+                    }
+
+                    val layoutConfig = layoutConfigBuilder.build()
+
+                    // Add layout configuration to card builder
+                    cardBuilder.layoutConfig(layoutConfig)
+                } catch (ex: NumberFormatException) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Invalid layout configuration values. Please enter valid integers.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                    return
+                }
+            }
+
+            // Build the level card
+            cardImage = cardBuilder.build()
 
             // Display the card
             val cardLabel = JLabel(ImageIcon(cardImage))
@@ -396,6 +653,44 @@ class LevelCardApp : JFrame() {
                 )
             }
         }
+    }
+
+    /**
+     * Updates the field labels in the form panel to indicate whether values are offsets or absolute positions.
+     *
+     * @param formPanel The form panel containing the labels
+     * @param labelSuffix The suffix to append to the label text (e.g., ":" or " Offset:")
+     */
+    private fun updateFieldLabels(formPanel: JPanel, labelSuffix: String) {
+        // Get all components in the form panel
+        val components = formPanel.components
+
+        // Update labels for position fields
+        for (component in components) {
+            if (component is JLabel) {
+                val text = component.text
+                // Extract the base name without any suffix
+                when {
+                    text.contains("Avatar X") -> component.text = "Avatar X$labelSuffix"
+                    text.contains("Avatar Y") -> component.text = "Avatar Y$labelSuffix"
+                    text.contains("Username X") -> component.text = "Username X$labelSuffix"
+                    text.contains("Username Y") -> component.text = "Username Y$labelSuffix"
+                    text.contains("Rank/Level X") -> component.text = "Rank/Level X$labelSuffix"
+                    text.contains("Rank/Level Y") -> component.text = "Rank/Level Y$labelSuffix"
+                    text.contains("XP Text X") -> component.text = "XP Text X$labelSuffix"
+                    text.contains("XP Text Y") -> component.text = "XP Text Y$labelSuffix"
+                    text.contains("Time Text X") -> component.text = "Time Text X$labelSuffix"
+                    text.contains("Time Text Y") -> component.text = "Time Text Y$labelSuffix"
+                    text.contains("Progress Bar X") -> component.text = "Progress Bar X$labelSuffix"
+                    text.contains("Progress Bar Y") -> component.text = "Progress Bar Y$labelSuffix"
+                    text.contains("Right Margin") -> component.text = "Right Margin$labelSuffix"
+                }
+            }
+        }
+
+        // Refresh the panel
+        formPanel.revalidate()
+        formPanel.repaint()
     }
 
     companion object {

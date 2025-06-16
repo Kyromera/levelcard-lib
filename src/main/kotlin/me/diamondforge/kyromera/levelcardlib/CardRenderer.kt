@@ -10,16 +10,17 @@ import javax.imageio.ImageIO
  * Class responsible for rendering the level card.
  */
 object CardRenderer {
-    private const val AVATAR_SIZE = 200 // Scaled from 120 (1.667x)
-    private const val AVATAR_MARGIN = 50 // Scaled from 30 (1.667x)
-    private const val TEXT_MARGIN = 270 // Scaled from 170 (1.583x) - Margin for text after avatar
-    private const val PROGRESS_BAR_HEIGHT = 33 // Scaled from 20 (1.667x)
-    private const val PROGRESS_BAR_Y_OFFSET = 217 // Scaled from 130 (1.667x)
-    private const val PROGRESS_BAR_MARGIN = 50 // Scaled from 30 (1.667x)
-    private const val USERNAME_Y_OFFSET = 83 // Scaled from 50 (1.667x)
-    private const val RANK_LEVEL_Y_OFFSET = 133 // Scaled from 80 (1.667x)
-    private const val XP_TEXT_Y_OFFSET = 200 // Scaled from 120 (1.667x)
-    private const val TIME_TEXT_Y_OFFSET = 267 // Scaled from 160 (1.667x)
+    // Public constants for layout configuration
+    const val AVATAR_SIZE = 200 // Scaled from 120 (1.667x)
+    const val AVATAR_MARGIN = 50 // Scaled from 30 (1.667x)
+    const val TEXT_MARGIN = 270 // Scaled from 170 (1.583x) - Margin for text after avatar
+    const val PROGRESS_BAR_HEIGHT = 33 // Scaled from 20 (1.667x)
+    const val PROGRESS_BAR_Y_OFFSET = 217 // Scaled from 130 (1.667x)
+    const val PROGRESS_BAR_MARGIN = 50 // Scaled from 30 (1.667x)
+    const val USERNAME_Y_OFFSET = 83 // Scaled from 50 (1.667x)
+    const val RANK_LEVEL_Y_OFFSET = 133 // Scaled from 80 (1.667x)
+    const val XP_TEXT_Y_OFFSET = 200 // Scaled from 120 (1.667x)
+    const val TIME_TEXT_Y_OFFSET = 267 // Scaled from 160 (1.667x)
 
     /**
      * Renders a level card with the specified parameters.
@@ -113,11 +114,19 @@ object CardRenderer {
      * Draws the avatar on the card.
      */
     private fun drawAvatar(canvas: Canvas, avatarBytes: ByteArray?, cardHeight: Int, accentColor: Int, userData: UserData, config: CardConfiguration) {
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.avatarXOffset?.toFloat() ?: config.avatarMargin.toFloat()
+        val yOffset = if (config.layoutConfig?.avatarYOffset != 0) {
+            config.layoutConfig?.avatarYOffset?.toFloat() ?: (cardHeight / 2 - config.avatarSize / 2).toFloat()
+        } else {
+            (cardHeight / 2 - config.avatarSize / 2).toFloat()
+        }
+
         AvatarManager.drawAvatar(
             canvas,
             avatarBytes,
-            config.avatarMargin.toFloat(),
-            (cardHeight / 2 - config.avatarSize / 2).toFloat(),
+            xOffset,
+            yOffset,
             config.avatarSize.toFloat(),
             accentColor,
             userData.onlineStatus,
@@ -188,7 +197,12 @@ object CardRenderer {
             color = 0xFFFFFFFF.toInt()
             isAntiAlias = true
         }
-        canvas.drawString(username, config.textMargin.toFloat(), config.usernameYOffset.toFloat(), usernameFont, usernamePaint)
+
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.usernameXOffset ?: config.textMargin
+        val yOffset = config.layoutConfig?.usernameYOffset ?: config.usernameYOffset
+
+        canvas.drawString(username, xOffset.toFloat(), yOffset.toFloat(), usernameFont, usernamePaint)
     }
 
     /**
@@ -200,8 +214,13 @@ object CardRenderer {
             color = 0xFFCCCCCC.toInt()
             isAntiAlias = true
         }
+
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.rankLevelXOffset ?: config.textMargin
+        val yOffset = config.layoutConfig?.rankLevelYOffset ?: config.rankLevelYOffset
+
         val rankLevelText = "Rank #$rank | Level $level"
-        canvas.drawString(rankLevelText, config.textMargin.toFloat(), config.rankLevelYOffset.toFloat(), rankLevelFont, rankLevelPaint)
+        canvas.drawString(rankLevelText, xOffset.toFloat(), yOffset.toFloat(), rankLevelFont, rankLevelPaint)
     }
 
     /**
@@ -213,8 +232,13 @@ object CardRenderer {
             color = 0xFFAAAAAA.toInt()
             isAntiAlias = true
         }
+
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.xpTextXOffset ?: config.textMargin
+        val yOffset = config.layoutConfig?.xpTextYOffset ?: config.xpTextYOffset
+
         val xpText = "$currentXP / $maxXP XP"
-        canvas.drawString(xpText, config.textMargin.toFloat(), config.xpTextYOffset.toFloat(), xpFont, xpPaint)
+        canvas.drawString(xpText, xOffset.toFloat(), yOffset.toFloat(), xpFont, xpPaint)
     }
 
     /**
@@ -236,11 +260,17 @@ object CardRenderer {
             color = 0xFF444444.toInt()
             isAntiAlias = true
         }
+
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.progressBarXOffset ?: config.textMargin
+        val yOffset = config.layoutConfig?.progressBarYOffset ?: config.progressBarYOffset
+        val rightMargin = config.layoutConfig?.progressBarRightMargin ?: config.progressBarMargin
+
         canvas.drawRRect(
             RRect.makeXYWH(
-                config.textMargin.toFloat(),
-                config.progressBarYOffset.toFloat(),
-                (cardWidth - config.textMargin - config.progressBarMargin).toFloat(),
+                xOffset.toFloat(),
+                yOffset.toFloat(),
+                (cardWidth - xOffset - rightMargin).toFloat(),
                 config.progressBarHeight.toFloat(),
                 (config.progressBarHeight / 2).toFloat()
             ),
@@ -252,17 +282,22 @@ object CardRenderer {
      * Draws the filled portion of the progress bar.
      */
     private fun drawProgressBarFill(canvas: Canvas, userData: UserData, cardWidth: Int, accentColor: Int, config: CardConfiguration) {
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.progressBarXOffset ?: config.textMargin
+        val yOffset = config.layoutConfig?.progressBarYOffset ?: config.progressBarYOffset
+        val rightMargin = config.layoutConfig?.progressBarRightMargin ?: config.progressBarMargin
+
         val progressWidth = (userData.currentXP - userData.minXpForCurrentLevel).toFloat() /
                 (userData.maxXpForCurrentLevel - userData.minXpForCurrentLevel).toFloat() *
-                (cardWidth - config.textMargin - config.progressBarMargin).toFloat()
+                (cardWidth - xOffset - rightMargin).toFloat()
         val progressPaint = Paint().apply {
             color = accentColor
             isAntiAlias = true
         }
         canvas.drawRRect(
             RRect.makeXYWH(
-                config.textMargin.toFloat(),
-                config.progressBarYOffset.toFloat(),
+                xOffset.toFloat(),
+                yOffset.toFloat(),
                 progressWidth,
                 config.progressBarHeight.toFloat(),
                 (config.progressBarHeight / 2).toFloat()
@@ -280,8 +315,13 @@ object CardRenderer {
             color = 0xFF888888.toInt()
             isAntiAlias = true
         }
+
+        // Use layout config if available, otherwise use default config
+        val xOffset = config.layoutConfig?.timeTextXOffset ?: config.textMargin
+        val yOffset = config.layoutConfig?.timeTextYOffset ?: config.timeTextYOffset
+
         val timeText = "Generated in ${generationTime}ms"
-        canvas.drawString(timeText, config.textMargin.toFloat(), config.timeTextYOffset.toFloat(), timeFont, timePaint)
+        canvas.drawString(timeText, xOffset.toFloat(), yOffset.toFloat(), timeFont, timePaint)
     }
 
     /**

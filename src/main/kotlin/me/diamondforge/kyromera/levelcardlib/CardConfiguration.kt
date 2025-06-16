@@ -29,7 +29,9 @@ class CardConfiguration private constructor(
     val timeFontSize: Float,
     // Background configuration
     val shadowBlur: Float,
-    val cornerRadius: Float
+    val cornerRadius: Float,
+    // Optional detailed layout configuration
+    val layoutConfig: LayoutConfig?
 ) {
     companion object {
         // Default dimensions
@@ -105,6 +107,9 @@ class CardConfiguration private constructor(
         // Background configuration
         private var shadowBlur = DEFAULT_SHADOW_BLUR
         private var cornerRadius = DEFAULT_CORNER_RADIUS
+
+        // Optional detailed layout configuration
+        private var layoutConfig: LayoutConfig? = null
 
         /**
          * Sets the dimensions of the card.
@@ -247,6 +252,18 @@ class CardConfiguration private constructor(
         }
 
         /**
+         * Sets the detailed layout configuration.
+         * This allows for independent positioning of all elements on the card.
+         *
+         * @param layoutConfig The layout configuration
+         * @return This builder for chaining
+         */
+        fun layoutConfig(layoutConfig: LayoutConfig): Builder {
+            this.layoutConfig = layoutConfig
+            return this
+        }
+
+        /**
          * Builds the CardConfiguration instance.
          *
          * @return A new CardConfiguration instance
@@ -258,7 +275,8 @@ class CardConfiguration private constructor(
                 textMargin, usernameYOffset, rankLevelYOffset, xpTextYOffset, timeTextYOffset,
                 progressBarHeight, progressBarYOffset, progressBarMargin,
                 usernameFontSize, rankLevelFontSize, xpFontSize, timeFontSize,
-                shadowBlur, cornerRadius
+                shadowBlur, cornerRadius,
+                layoutConfig
             )
         }
     }
