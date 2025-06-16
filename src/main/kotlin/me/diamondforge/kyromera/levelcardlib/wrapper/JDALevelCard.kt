@@ -351,6 +351,11 @@ object JDALevelCard {
                 .onlineStatus(userData.onlineStatus)
                 .showStatusIndicator(userData.showStatusIndicator)
                 .showGenerationTime(config.showGenerationTime)
+                .apply {
+                    if (config.layoutConfig != null) {
+                        layoutConfig(config.layoutConfig)
+                    }
+                }
                 .build()
         }
 

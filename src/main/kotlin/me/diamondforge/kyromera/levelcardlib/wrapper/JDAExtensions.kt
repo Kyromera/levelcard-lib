@@ -1,5 +1,6 @@
 package me.diamondforge.kyromera.levelcardlib.wrapper
 
+import me.diamondforge.kyromera.levelcardlib.LayoutConfig
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.Message
@@ -128,7 +129,8 @@ fun User.sendLevelCard(
     maxXpForCurrentLevel: Int,
     minXpForCurrentLevel: Int = 0,
     fileName: String = "level-card.png",
-    content: String? = null
+    content: String? = null,
+    layoutConfig: LayoutConfig? = null
 ): Message {
     if (channel == null) {
         throw IllegalArgumentException("Channel cannot be null")
@@ -152,11 +154,17 @@ fun User.sendLevelCard(
     }
 
     try {
-        val levelCard = this.createLevelCard()
+        val builder = this.createLevelCard()
             .rank(rank)
             .level(level)
             .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
-            .build()
+
+        // Apply layout configuration if provided
+        if (layoutConfig != null) {
+            builder.layoutConfig(layoutConfig)
+        }
+
+        val levelCard = builder.build()
 
         return levelCard.sendToChannel(channel, fileName, content)
     } catch (e: IOException) {
@@ -190,7 +198,8 @@ fun Member.sendLevelCard(
     maxXpForCurrentLevel: Int,
     minXpForCurrentLevel: Int = 0,
     fileName: String = "level-card.png",
-    content: String? = null
+    content: String? = null,
+    layoutConfig: LayoutConfig? = null
 ): Message {
     if (channel == null) {
         throw IllegalArgumentException("Channel cannot be null")
@@ -214,11 +223,17 @@ fun Member.sendLevelCard(
     }
 
     try {
-        val levelCard = this.createLevelCard()
+        val builder = this.createLevelCard()
             .rank(rank)
             .level(level)
             .xp(minXpForCurrentLevel, maxXpForCurrentLevel, currentXP)
-            .build()
+
+        // Apply layout configuration if provided
+        if (layoutConfig != null) {
+            builder.layoutConfig(layoutConfig)
+        }
+
+        val levelCard = builder.build()
 
         return levelCard.sendToChannel(channel, fileName, content)
     } catch (e: IOException) {
