@@ -55,7 +55,7 @@ object JDALevelCard {
         private var accentColor: Int? = null
         private var width: Int = 950
         private var height: Int = 300
-        private var showStatusIndicator: Boolean = true
+        private var showStatusIndicator: Boolean = false
         private var showGenerationTime: Boolean = false
         private var downloadAvatar: Boolean = true
         private var customOnlineStatus: OnlineStatus? = null
@@ -222,12 +222,14 @@ object JDALevelCard {
         /**
          * Sets a custom online status for the user.
          * This overrides the status that would be determined from the Member object.
+         * This automatically enables the status indicator.
          *
          * @param status The online status to use
          * @return This builder for chaining
          */
         fun onlineStatus(status: OnlineStatus): Builder {
             this.customOnlineStatus = status
+            this.showStatusIndicator = true
             return this
         }
 

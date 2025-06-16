@@ -22,7 +22,7 @@ class UserDataTest {
         assertEquals(150, userData.currentXP)
         assertEquals(ImageMode.LOCAL, userData.imageMode)
         assertEquals(OnlineStatus.ONLINE, userData.onlineStatus)
-        assertTrue(userData.showStatusIndicator)
+        assertFalse(userData.showStatusIndicator)
         assertNotNull(userData.avatarBytes)
         assertNull(userData.avatarUrl)
     }

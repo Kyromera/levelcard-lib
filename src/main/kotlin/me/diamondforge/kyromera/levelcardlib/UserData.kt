@@ -74,7 +74,7 @@ data class UserData private constructor(
         private var avatarUrl: String? = null
         private var imageMode: ImageMode = ImageMode.LOCAL
         private var onlineStatus: OnlineStatus = OnlineStatus.ONLINE
-        private var showStatusIndicator: Boolean = true
+        private var showStatusIndicator: Boolean = false
 
         /**
          * Sets the user's rank.
@@ -146,12 +146,14 @@ data class UserData private constructor(
 
         /**
          * Sets the online status.
+         * This automatically enables the status indicator.
          *
          * @param onlineStatus The online status
          * @return This builder for chaining
          */
         fun onlineStatus(onlineStatus: OnlineStatus): Builder {
             this.onlineStatus = onlineStatus
+            this.showStatusIndicator = true
             return this
         }
 

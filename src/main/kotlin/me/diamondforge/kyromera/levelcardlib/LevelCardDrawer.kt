@@ -171,7 +171,7 @@ object LevelCardDrawer {
         private var width: Int = DEFAULT_WIDTH
         private var height: Int = DEFAULT_HEIGHT
         private var onlineStatus: OnlineStatus = OnlineStatus.ONLINE
-        private var showStatusIndicator: Boolean = true
+        private var showStatusIndicator: Boolean = false
         private var showGenerationTime: Boolean = false
         private var layoutConfig: LayoutConfig? = null
 
@@ -279,12 +279,14 @@ object LevelCardDrawer {
 
         /**
          * Sets the online status.
+         * This automatically enables the status indicator.
          *
          * @param onlineStatus The online status to display
          * @return This builder for chaining
          */
         fun onlineStatus(onlineStatus: OnlineStatus): Builder {
             this.onlineStatus = onlineStatus
+            this.showStatusIndicator = true
             return this
         }
 
