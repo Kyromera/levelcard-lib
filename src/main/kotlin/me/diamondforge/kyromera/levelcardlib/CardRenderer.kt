@@ -140,10 +140,11 @@ object CardRenderer {
      */
     private fun loadFonts(): Pair<Typeface, Typeface> {
         val fontManager = FontMgr.default
+        val semibold = FontStyle(FontWeight.SEMI_BOLD, FontWidth.NORMAL, FontSlant.UPRIGHT)
 
         val boldTypeface = listOf("Montserrat", "Arial", "Sans-Serif", null).firstNotNullOfOrNull { family ->
             if (family != null) {
-                fontManager.matchFamilyStyle(family, FontStyle.BOLD)
+                fontManager.matchFamilyStyle(family, semibold)
             } else {
                 fontManager.matchFamilyStyleCharacter(null, FontStyle.BOLD, null, 'A'.code)
             }
